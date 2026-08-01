@@ -187,12 +187,27 @@ What the backend enforces, in `functions/src/replay.ts`:
 | `sessionId` uniqueness inside the transaction | double-counting a daily attempt |
 | Firestore rules deny all client writes to progression | writing XP directly |
 
-Every row above except the last two is covered by
-`functions/__tests__/replay.test.ts`, which does not use fixtures: each case
-drives a real `GameSession` and then tampers with the payload the way an
-attacker would. The important property it pins down is that a forged
-`outcome` or `solution` is *not rejected* — it is silently overwritten by the
-replayed truth, so no client-supplied field can ever reach the scorer.
+Every row is covered by tests, across three suites:
+
+| Suite | Covers | Needs |
+| --- | --- | --- |
+| `functions/__tests__/replay.test.ts` | forged games — seeds, moves, timings, payload shape | nothing |
+| `functions/__tests__/emulator/submitGameResult.test.ts` | the write transaction: idempotency, the six documents, server-side scoring | Firestore emulator |
+| `functions/__tests__/emulator/firestore.rules.test.ts` | every allow/deny path in `firestore.rules` | Firestore emulator |
+
+None of them use fixtures — each case drives a real `GameSession` and then
+tampers with the result the way an attacker would.
+
+Two properties are worth stating because they are easy to get wrong:
+
+- **A forged `outcome` or `solution` is not rejected, it is overwritten.** The
+  replayed truth replaces whatever the client sent, so no client-supplied field
+  reaches the scorer at all. That is stronger than rejection, which would leave
+  a version-skew failure mode.
+- **One attempt per day is enforced by the transaction, not by the UI.** Daily
+  session ids are deterministic (`{uid}_{YYYY-MM-DD}`), so a second attempt
+  collides with an existing document inside the transaction and returns
+  `duplicate` without touching XP, statistics or any leaderboard.
 
 What it does **not** stop: a modified client that plays the real game correctly
 but has a solver choose its guesses. The puzzle has to exist on the device for

@@ -62,6 +62,17 @@ Local development against emulators:
 firebase emulators:start           # Auth 9099 · Firestore 8080 · Functions 5001 · UI 4000
 ```
 
+Before deploying rules, run the suite that checks them. It starts and stops the
+Firestore emulator itself, so the only prerequisite is a JDK:
+
+```bash
+npm --prefix functions run test:emulator
+```
+
+44 tests covering every allow/deny path in `firestore.rules` plus the
+`submitGameResult` write transaction. Treat a failure here as a release
+blocker — a permissive rule is not visible in the app until someone exploits it.
+
 ## 3. Native analytics (optional but recommended)
 
 The Firebase JS SDK has no React Native Analytics implementation. The app ships

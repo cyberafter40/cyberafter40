@@ -33,7 +33,7 @@ Working out which is the game.
 | **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic (2/3/4 digits) |
 | **Progression** | XP, 50 levels with titles, 19 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 104 tests — 77 over the engine, scoring and progression layers, 27 over server-side result validation |
+| **Tests** | 148 tests — 77 domain, 27 server-side result validation, 44 against the Firestore emulator (security rules + the write transaction) |
 
 ### Documentation
 
@@ -68,11 +68,14 @@ Backend:
 
 ```bash
 cd functions && npm install && npm run build
-npm test                                       # 27 result-validation tests
+npm test                # 27 result-validation tests, no infrastructure needed
+npm run test:emulator   # 44 tests: security rules + the write transaction
+                        # (starts and stops the Firestore emulator itself;
+                        #  needs Java)
 firebase emulators:start                       # local Auth + Firestore + Functions
 ```
 
-From the repo root, `npm run test:all` runs both suites.
+From the repo root, `npm run test:all` runs both infrastructure-free suites.
 
 ```bash
 npm run deploy:rules && npm run deploy:functions

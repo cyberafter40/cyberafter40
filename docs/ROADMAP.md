@@ -84,14 +84,15 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**Security rules and the write transaction are untested.** The 104 tests cover
-the pure domain layers and the whole server-side validation path
-(`functions/__tests__/replay.test.ts`), but two things are still only verified
-by hand: `firestore.rules`, and the transaction body of `submitGameResult` —
-idempotency on duplicate session ids, and the six documents it writes.
+**The Auth emulator path is untested.** 148 tests now cover the domain layers,
+server-side replay, `firestore.rules` and the `submitGameResult` transaction.
+The one backend path still verified only by hand is `deleteAccount`, because it
+calls `getAuth().deleteUser()` and so needs the Auth emulator alongside
+Firestore. Given App Store Guideline 5.1.1(v) makes deletion a shipping
+requirement, it deserves a test that asserts the profile, sessions, daily
+entries, public profile and every leaderboard entry are actually gone.
 
-Both need the emulator: `@firebase/rules-unit-testing` for the rules, and
-`firebase-functions-test` against the Firestore emulator for the transaction.
-That is the next test investment, and it is the one that would catch a
-regression in the rule that stops a client from bootstrapping itself onto the
-leaderboard.
+**The scheduled function is untested.** `provisionDailyChallenges` is
+create-only and idempotent by construction, but nothing proves it — in
+particular that a second run does not overwrite a challenge players are
+mid-way through.

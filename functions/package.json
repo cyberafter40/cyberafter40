@@ -10,6 +10,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "jest",
+    "test:emulator": "firebase emulators:exec --only firestore --project mindcode-rules-test \"jest --config jest.emulator.config.js\"",
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
@@ -23,8 +24,11 @@
     "module-alias": "^2.2.3"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.1",
     "@types/jest": "^29.5.12",
     "@types/module-alias": "^2.0.4",
+    "firebase": "^12.17.0",
+    "firebase-tools": "^15.25.1",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.5",
     "typescript": "~5.3.3"
@@ -35,6 +39,10 @@
     "rootDir": "..",
     "testMatch": [
       "<rootDir>/functions/__tests__/**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/functions/__tests__/emulator/"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"
