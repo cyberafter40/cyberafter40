@@ -13,9 +13,28 @@ Functions are all written against normalised shapes — `GameOutcome`,
 `ScoreBreakdown`, `ProgressEvent` — that a memory game or a reaction test will
 produce just as naturally as the number puzzle does.
 
-The test of that claim is concrete: adding Memory Grid should touch exactly two
-files that already exist (`src/games/index.ts` and `src/games/renderers.tsx`)
-and nothing else. See [GAME_ENGINE_GUIDE.md](GAME_ENGINE_GUIDE.md).
+That claim has now been tested rather than asserted: **Memory Grid shipped as a
+second engine**, in a different category, with a different scoring shape. What
+it cost, measured:
+
+| | |
+| --- | --- |
+| New files | 5, all under `src/games/memoryGrid/` |
+| Registry edits | 2 lines in `src/games/index.ts`, 2 in `src/games/renderers.tsx` |
+| Scoring | 1 new `ScoringProfile` — composed from existing rules, no new rule code |
+| Progression, statistics, persistence, security rules, Cloud Functions, navigation | **unchanged** |
+| Backend | validated the new game with no edits at all — engines resolve through the registry |
+
+One thing the claim got wrong, and it is worth recording: `HomeScreen` had
+`'number-logic'` hardcoded in its free-play section. Adding a second game
+exposed it immediately. It is now driven by `listLiveGameModules()`, so a third
+module appears there with no edit — but the leak was real, and it is the kind
+only a second implementation finds.
+
+`__tests__/platform.test.ts` exists to keep this honest: it drives a memory game
+through the unmodified scoring and progress engines and asserts the results are
+meaningful, not merely non-crashing. See
+[GAME_ENGINE_GUIDE.md](GAME_ENGINE_GUIDE.md) for the procedure.
 
 ---
 

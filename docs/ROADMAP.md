@@ -14,18 +14,22 @@ architecture already supports, cheapest and highest-signal first.
 | **Share cards** | v1 shares text. A rendered image of the guess history (spoiler-free — scores only, never digits) is what actually spreads. |
 | **Hint system** | `isConsistent` in `matching.ts` is the structural primitive, already written and unused. A hint costs XP and rules out one digit. |
 
-## v1.2 — the second game
+## v1.2 — more modules
 
-Memory Grid, following [GAME_ENGINE_GUIDE.md](GAME_ENGINE_GUIDE.md) exactly.
-This is the release that proves the platform claim: if it needs schema changes,
-scoring changes or new screens, the abstraction was wrong and should be fixed
-before a third game compounds the mistake.
+**Memory Grid shipped in v1**, which was the release meant to prove the platform
+claim. It mostly held: five new files, four lines in two existing ones, a new
+`ScoringProfile`, and no changes at all to progression, persistence, security
+rules or the backend. It also found one genuine leak — `HomeScreen` had a game
+id hardcoded — which is exactly what a second implementation is for.
 
-Then Pattern Sense, Reaction Lab and Deduction Room — all four are already
+Next: Pattern Sense, Reaction Lab and Deduction Room, all three already
 registered as locked cards in `src/games/upcoming.ts` with real metadata.
 
-A cross-module Daily Challenge rotation follows naturally: `dailyVariantPool`
-and `deriveDailyChallenge` already select by module id.
+**Cross-module Daily Challenge rotation.** The daily is single-module in v1
+(`DEFAULT_MODULE_ID`), and Memory Grid ships with an empty `dailyVariantPool`
+because of it. `deriveDailyChallenge` already selects by module id, so this is a
+small change — rotate the module as well as the variant, and give each module a
+non-empty pool.
 
 ## v1.3 — training, not just playing
 
@@ -84,7 +88,7 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**Index requirements are unverified.** 160 tests now cover the domain layers,
+**Index requirements are unverified.** 190 tests now cover the domain layers,
 server-side replay, `firestore.rules` and all three Cloud Functions — but the
 Firestore emulator does not enforce indexes, so no test can prove a query will
 work against a real project. `deleteAccount`'s collection-group sweep over
@@ -95,6 +99,12 @@ once on staging.
 
 **No end-to-end test on a device.** Everything below the React layer is tested;
 nothing above it is. No component tests, no Detox/Maestro run, no screenshot
-regression. The screens are simple enough that this is a reasonable v1 trade,
-but the first bug that reaches a user will probably be a rendering or navigation
-one, not a scoring one.
+regression. This is now the largest gap by some distance — and Memory Grid
+widened it, because `MemoryGridBoard` carries real timing logic (the reveal
+sequence) that no test touches. The first bug that reaches a user will probably
+be a rendering or timing one, not a scoring one.
+
+**How to Play only covers Number Logic.** `HowToPlayScreen` is the ±1 explainer
+and is hardcoded to that module. Memory Grid teaches itself on the board
+("Watch" → "Repeat it"), so nothing is broken, but the screen should take a
+module id and render per-module rules now that there is more than one game.

@@ -2,6 +2,7 @@ import React, { type ComponentType } from 'react';
 import { View } from 'react-native';
 import type { UseGameSessionValue } from '@/state/useGameSession';
 import { EmptyState } from '@/ui/components';
+import { MemoryGridBoard } from './memoryGrid/MemoryGridBoard';
 import { NumberPadBoard } from './numberLogic/NumberPadBoard';
 
 /**
@@ -33,6 +34,7 @@ function UnavailableBoard() {
 
 const renderers: Record<string, ComponentType<GameRendererProps>> = {
   'number-pad': NumberPadBoard,
+  'memory-grid': MemoryGridBoard,
   unavailable: UnavailableBoard,
 };
 

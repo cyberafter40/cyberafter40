@@ -30,10 +30,11 @@ Working out which is the game.
 | --- | --- |
 | **App** | React Native (Expo, TypeScript) |
 | **Backend** | Firebase — Auth, Firestore, Cloud Functions, Analytics |
-| **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic (2/3/4 digits) |
-| **Progression** | XP, 50 levels with titles, 19 badges, daily streaks |
+| **Games** | Number Logic (2/3/4 digits) · Memory Grid (recall a tile sequence) |
+| **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic free play |
+| **Progression** | XP, 50 levels with titles, 21 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 160 tests — 77 domain, 27 server-side result validation, 56 against the Firebase emulators (security rules and all three Cloud Functions) |
+| **Tests** | 190 tests — 102 domain, 31 server-side result validation, 57 against the Firebase emulators (security rules and all three Cloud Functions) |
 
 ### Documentation
 
@@ -59,7 +60,7 @@ fail on launch — see [`docs/DEPLOYMENT_APPSTORE.md`](docs/DEPLOYMENT_APPSTORE.
 for the ten-minute project setup.
 
 ```bash
-npm test          # 77 domain tests — no emulator or network needed
+npm test          # 102 domain tests — no emulator or network needed
 npm run typecheck # full app type check
 npm run lint
 ```
@@ -68,8 +69,8 @@ Backend:
 
 ```bash
 cd functions && npm install && npm run build
-npm test                # 27 result-validation tests, no infrastructure needed
-npm run test:emulator   # 56 tests: security rules + all three functions
+npm test                # 31 result-validation tests, no infrastructure needed
+npm run test:emulator   # 57 tests: security rules + all three functions
                         # (starts and stops the emulators itself; needs Java)
 firebase emulators:start                       # local Auth + Firestore + Functions
 ```
@@ -90,9 +91,11 @@ with one game in it. Three pure, dependency-free engines do the work — a
 **User Progress Engine** (XP, levels, streaks, badges) — and none of them knows
 what Bulls & Cows is. The `+1/−1` rule itself is a swappable
 [`FeedbackPolicy`](src/games/numberLogic/policies.ts), not a hardcoded branch.
-Adding memory, pattern, reaction or reasoning games means writing a `GameEngine`
-and registering it; scoring, progression, statistics, persistence, analytics and
-navigation all keep working untouched.
+Adding a game means writing a `GameEngine` and registering it; progression,
+statistics, persistence, analytics and navigation keep working untouched. That
+is not a hope — **Memory Grid is the second engine**, in a different category
+with a different scoring shape, and it cost five new files plus four lines in
+two existing ones. `__tests__/platform.test.ts` keeps the claim honest.
 
 Those same pure modules are compiled into the Cloud Functions, so the server
 replays every submitted game with byte-identical logic instead of a
@@ -103,7 +106,7 @@ src/
   engine/     GameEngine contract, seeded RNG, registry, session runtime
   scoring/    composable scoring rules and profiles
   progress/   XP curve, levels, badges, streaks, the progress reducer
-  games/      numberLogic/ (live) + roadmap module stubs
+  games/      numberLogic/ + memoryGrid/ (both live) + roadmap stubs
   daily/      deterministic Daily Challenge derivation (shared with backend)
   services/   Firebase: auth, Firestore repositories, analytics, offline queue
   state/      React contexts and hooks

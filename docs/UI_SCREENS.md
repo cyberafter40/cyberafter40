@@ -37,8 +37,9 @@ The main screen from the brief. Top to bottom:
   variant, the "same code for everyone today, one attempt" line, and a full-width
   play button. After playing: the result and a live countdown to the next
   challenge at midnight UTC. Community stats appear once the day has players.
-- **Classic** — unlocked variants as tappable cards, locked ones dimmed with
-  their unlock level
+- **One section per live game module**, rendered from the registry rather than
+  from a hardcoded list — unlocked variants as tappable cards, locked ones
+  dimmed with their unlock level. A third module appears here with no edit.
 - **Coming to MindCode** — roadmap modules, rendered from the same registry list
   as the live game
 - How to play
@@ -60,6 +61,17 @@ like a fixed object rather than a page.
 - Keypad digits that cannot appear in the code are dimmed. They are still
   tappable: a "pointless" guess is part of thinking aloud
 - Haptics: light on tap, medium on submit, success notification on a solve
+
+### Game board: Memory Grid — `MemoryGridBoard.tsx`
+The second play surface, hosted by the same `GameScreen`. Three phases: the
+sequence plays back tile by tile, then the grid becomes tappable, then it hands
+off. The reveal lives in the renderer rather than the engine — it is a
+presentation concern, so keeping it here leaves the engine pure and replayable
+and lets the timing be re-tuned (or skipped for accessibility) without touching
+game logic.
+
+Correct taps flash green, wrong ones red, and the header counts both progress
+and remaining mistakes so the stakes are always legible.
 
 ### Result — `ResultScreen.tsx`
 Reveals in one calm beat: outcome → the code → what it earned.
@@ -91,7 +103,7 @@ renders offline and instantly; only the recent-games list needs the network and
 it degrades to a quiet empty state.
 
 ### Badges — `BadgesScreen.tsx`
-Grid of 19 badges, tier-coloured borders. Unlocked first, then visible locked,
+Grid of 21 badges, tier-coloured borders. Unlocked first, then visible locked,
 then secrets — so the wall reads as an achievement record, not a to-do list.
 Secret badges show as `❔` until earned.
 

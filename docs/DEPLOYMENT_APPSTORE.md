@@ -69,7 +69,7 @@ Firestore emulator itself, so the only prerequisite is a JDK:
 npm --prefix functions run test:emulator
 ```
 
-56 tests covering every allow/deny path in `firestore.rules` plus all three
+57 tests covering every allow/deny path in `firestore.rules` plus all three
 Cloud Functions. Treat a failure here as a release blocker — a permissive rule
 is not visible in the app until someone exploits it.
 
@@ -208,8 +208,9 @@ story both change.
 upload.
 
 **Guideline 4.2 — minimum functionality.** Puzzle games get scrutinised for
-being "too simple". Point at the depth in the review notes: three difficulty
-variants, a global daily challenge, 50 levels, 19 badges, three leaderboards.
+being "too simple". Point at the depth in the review notes: two distinct
+training modules with six difficulty variants between them, a global daily
+challenge, 50 levels, 21 badges, three leaderboards.
 
 **Review notes.** Reviewers must be able to see everything without a barrier.
 Anonymous sign-in means they can, but say so explicitly:

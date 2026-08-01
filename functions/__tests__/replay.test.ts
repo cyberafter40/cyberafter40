@@ -124,6 +124,77 @@ describe('validateAndReplay — legitimate play', () => {
   });
 });
 
+describe('validateAndReplay — a second game module, with no backend changes', () => {
+  /**
+   * `validateAndReplay` resolves engines through the registry, so shipping
+   * Memory Grid gave the backend a second game for free. If this block ever
+   * needs a special case, the platform abstraction has sprung a leak.
+   */
+  function playMemory(options: { mistakes?: number } = {}): GameResult {
+    let clock = NOW - 120_000;
+    const session = new GameSession({
+      sessionId: 'user1_memory_1',
+      moduleId: 'memory-grid',
+      variantId: 'standard',
+      mode: 'classic',
+      seed: 'classic:user1:memory-grid:standard:7',
+      now: () => {
+        const at = clock;
+        clock += 3_000;
+        return at;
+      },
+    });
+
+    const state = session.getState<{ sequence: number[]; config: { size: number } }>();
+    for (let i = 0; i < (options.mistakes ?? 0); i += 1) {
+      const wrong = (state.sequence[0]! + 1) % (state.config.size * state.config.size);
+      session.submit({ tile: wrong });
+    }
+    for (const tile of state.sequence) session.submit({ tile });
+
+    return session.toResult();
+  }
+
+  it('accepts a legitimate memory game', () => {
+    const validated = validateAndReplay(playMemory(), NOW);
+
+    expect(validated.outcome.status).toBe('won');
+    expect(validated.outcome.accuracy).toBe(1);
+    expect(validated.outcome.metrics.mistakes).toBe(0);
+  });
+
+  it('recomputes mistakes from the taps rather than trusting the client', () => {
+    const honest = playMemory({ mistakes: 1 });
+    const forged: GameResult = {
+      ...honest,
+      outcome: { ...honest.outcome, accuracy: 1, metrics: { ...honest.outcome.metrics, mistakes: 0 } },
+    };
+
+    const validated = validateAndReplay(forged, NOW);
+    expect(validated.outcome.metrics.mistakes).toBe(1);
+    expect(validated.outcome.accuracy).toBeLessThan(1);
+  });
+
+  it('rejects a tap that is not on the grid', () => {
+    const result = playMemory();
+    const first = result.moves[0] as MoveRecord;
+    const offGrid: GameResult = {
+      ...result,
+      moves: [{ ...first, move: { tile: 99 } }, ...result.moves.slice(1)],
+    };
+
+    expect(() => validateAndReplay(offGrid, NOW)).toThrow(/is not legal/);
+  });
+
+  it('reveals the sequence only from the replayed state', () => {
+    const result = playMemory();
+    const forged: GameResult = { ...result, solution: '0-0-0-0-0-0' };
+
+    expect(validateAndReplay(forged, NOW).solution).toBe(result.solution);
+    expect(result.solution).toMatch(/^\d+(-\d+)+$/);
+  });
+});
+
 describe('validateAndReplay — forged results', () => {
   it('discards the client’s claimed outcome in favour of the replay', () => {
     const lost = playGame({ lose: true });

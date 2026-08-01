@@ -1,32 +1,46 @@
 # Adding a brain-training module
 
 The platform claim in [ARCHITECTURE.md](ARCHITECTURE.md) is only worth
-something if it is cheap to act on. This is the whole procedure.
+something if it is cheap to act on. This is the whole procedure — and it is
+described from experience, not from intent: **Memory Grid** was built this way
+and ships in v1. Read `src/games/memoryGrid/` alongside this document.
 
 **You write:** an engine, a module descriptor, a renderer.
-**You edit:** two lines, in two existing files.
-**You do not touch:** scoring, progression, statistics, persistence, security
-rules, Cloud Functions, navigation, or any screen.
+**You edit:** two lines in `src/games/index.ts`, two in `src/games/renderers.tsx`.
+**You may add:** a `ScoringProfile`, if the stock rules do not suit your game.
+Memory Grid needed one — see step 2.
+**You do not touch:** progression, statistics, persistence, security rules,
+Cloud Functions, or navigation.
+
+What building the second module actually taught us, which the first version of
+this guide got wrong: it also found a hardcoded `'number-logic'` in
+`HomeScreen`. If your module does not appear on the home screen, that is the
+class of bug to look for — a screen naming a game instead of asking the
+registry.
 
 ---
 
 ## 1. The engine
 
 ```
-src/games/memoryGrid/
-  engine.ts     the rules
-  generator.ts  config type + seeded puzzle generation
-  module.ts     the GameModule descriptor
+src/games/memoryGrid/          ← a real, working example; read it
+  generator.ts        config type + seeded puzzle generation
+  engine.ts           the rules
+  module.ts           the GameModule descriptor
+  MemoryGridBoard.tsx the play surface
   index.ts
 ```
+
+The sketch below is Memory Grid in outline; the shipped version is fuller.
 
 ```ts
 // src/games/memoryGrid/engine.ts
 import { invalid, VALID, type GameEngine } from '@/engine/types';
 
-export interface MemoryGridConfig { size: number; sequenceLength: number; maxAttempts: number }
+export interface MemoryGridConfig { size: number; sequenceLength: number;
+                                    maxMistakes: number; revealMs: number }
 export interface MemoryGridState  { config: MemoryGridConfig; sequence: number[];
-                                    entered: number[]; mistakes: number;
+                                    entered: number[]; mistakes: number; taps: number;
                                     status: GameStatus; startedAt: number; finishedAt: number | null }
 export interface MemoryGridMove   { tile: number }
 
@@ -59,10 +73,11 @@ export const memoryGridEngine: GameEngine<
   getOutcome(state, at) {
     return {
       status: state.status === 'in_progress' ? 'abandoned' : state.status,
-      movesUsed: state.entered.length,
-      maxMoves: state.config.sequenceLength,
+      movesUsed: state.taps,
+      maxMoves: state.config.sequenceLength + state.config.maxMistakes,
       durationMs: (state.finishedAt ?? at) - state.startedAt,
-      accuracy: 1 - state.mistakes / Math.max(1, state.entered.length),
+      // Precision: what fraction of taps landed. A perfect run is 1.
+      accuracy: state.taps === 0 ? 0 : state.entered.length / state.taps,
       metrics: { sequenceLength: state.config.sequenceLength, mistakes: state.mistakes },
     };
   },
@@ -96,7 +111,7 @@ completely different games. Pick something that distinguishes skill from luck:
 | Module | Sensible `accuracy` |
 | --- | --- |
 | Number Logic | fraction of remaining uncertainty eliminated per guess |
-| Memory Grid | correct recalls ÷ total recalls |
+| Memory Grid | correct taps ÷ total taps (this is what shipped) |
 | Pattern Sense | correct predictions before the first mistake ÷ total |
 | Reaction Lab | hit rate on go-trials, penalised by false alarms |
 
@@ -110,7 +125,7 @@ exists to reward.
 ```ts
 // src/games/memoryGrid/module.ts
 import type { GameModule } from '@/engine/types';
-import { standardScoringProfile, reflexScoringProfile } from '@/scoring/profiles';
+import { recallScoringProfile } from '@/scoring/profiles';
 
 export const memoryGridModule: GameModule<…> = {
   id: 'memory-grid',
@@ -121,15 +136,17 @@ export const memoryGridModule: GameModule<…> = {
   status: 'live',
   engine: memoryGridEngine,
   variants: [
-    { id: 'short', title: 'Short', subtitle: '4 tiles', difficulty: 1,
-      unlocksAtLevel: 0, config: { size: 3, sequenceLength: 4, maxAttempts: 4 } },
-    { id: 'long',  title: 'Long',  subtitle: '7 tiles', difficulty: 4,
-      unlocksAtLevel: 6, config: { size: 4, sequenceLength: 7, maxAttempts: 7 } },
+    { id: 'short', title: 'Four Tiles', subtitle: 'A gentle warm-up.', difficulty: 1,
+      unlocksAtLevel: 0,
+      config: { size: 3, sequenceLength: 4, maxMistakes: 2, revealMs: 620 } },
+    { id: 'long', title: 'Nine Tiles', subtitle: 'Serious recall.', difficulty: 5,
+      unlocksAtLevel: 5,
+      config: { size: 4, sequenceLength: 9, maxMistakes: 3, revealMs: 500 } },
   ],
-  dailyVariantPool: ['short'],
+  dailyVariantPool: [],              // v1's daily rotation is single-module
   renderer: 'memory-grid',
-  scoringProfileId: reflexScoringProfile.id,   // or standardScoringProfile.id
-  scoring: { basePoints: 120, difficultyStep: 0.35 },
+  scoringProfileId: recallScoringProfile.id,
+  scoring: { basePoints: 110, difficultyStep: 0.4 },
 };
 ```
 
@@ -140,6 +157,16 @@ declares which variants the Daily Challenge may rotate through.
 If the stock rules do not fit, write a new `ScoringProfile` in
 `src/scoring/profiles.ts` from the rules in `src/scoring/rules.ts` (or add new
 ones). You are composing a list, not writing a scoring function.
+
+Memory Grid needed exactly this, and the reason generalises. `moveEfficiencyRule`
+pays for finishing under budget — but a flawless recall run uses its whole tap
+budget minus the mistake allowance, so efficiency would have paid out for
+playing *badly*, and `firstTryRule` could never fire at all. `recallScoringProfile`
+drops both and leans on `deductionRule`, which reads the engine's `accuracy`.
+
+The lesson: **check every stock rule against your engine's definition of
+`movesUsed`.** Rules that assume move economy do not transfer to games where the
+move count is fixed by construction.
 
 ---
 

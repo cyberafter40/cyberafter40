@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View } from 'react-native';
-import { getGameModule, listGameModules, unlockedVariants } from '@/engine/registry';
+import { getGameModule, listGameModules, listLiveGameModules } from '@/engine/registry';
 import { buildSeed } from '@/engine/rng';
 import { dailySessionId } from '@/daily/challenge';
 import { describeLevel } from '@/progress/levels';
@@ -146,48 +146,65 @@ export function HomeScreen({ navigation }: Props) {
         </View>
       </Card>
 
-      {/* Free play */}
-      <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        Classic
-      </Text>
-      {unlockedVariants('number-logic', level.level).map((variant) => (
-        <Card
-          key={variant.id}
-          onPress={() => startClassic('number-logic', variant.id)}
-          accessibilityLabel={`Play ${variant.title}`}
-          style={{ marginTop: theme.spacing.md }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ flex: 1 }}>
-              <Text variant="bodyStrong">{variant.title}</Text>
-              <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                {variant.subtitle}
-              </Text>
-            </View>
-            <Text variant="caption" tone="faint">
-              {'★'.repeat(variant.difficulty)}
-            </Text>
-          </View>
-        </Card>
-      ))}
+      {/* Free play — one section per live module, driven by the registry.
+          This deliberately does not name a game: shipping a second module adds
+          a section here with no edit. */}
+      {listLiveGameModules().map((module) => (
+        <View key={module.id}>
+          <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
+            {module.icon}  {module.title}
+          </Text>
+          <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.xs }}>
+            {module.tagline}
+          </Text>
 
-      {getGameModule('number-logic').variants
-        .filter((variant) => variant.unlocksAtLevel > level.level)
-        .map((variant) => (
-          <Card key={variant.id} style={{ marginTop: theme.spacing.md, opacity: 0.55 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <View style={{ flex: 1 }}>
-                <Text variant="bodyStrong">{variant.title}</Text>
-                <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                  Unlocks at level {variant.unlocksAtLevel}
-                </Text>
-              </View>
-              <Text variant="caption" tone="faint">
-                🔒
-              </Text>
-            </View>
-          </Card>
-        ))}
+          {module.variants.map((variant) => {
+            const locked = variant.unlocksAtLevel > level.level;
+
+            if (locked) {
+              return (
+                <Card
+                  key={variant.id}
+                  style={{ marginTop: theme.spacing.md, opacity: 0.55 }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ flex: 1 }}>
+                      <Text variant="bodyStrong">{variant.title}</Text>
+                      <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
+                        Unlocks at level {variant.unlocksAtLevel}
+                      </Text>
+                    </View>
+                    <Text variant="caption" tone="faint">
+                      🔒
+                    </Text>
+                  </View>
+                </Card>
+              );
+            }
+
+            return (
+              <Card
+                key={variant.id}
+                onPress={() => startClassic(module.id, variant.id)}
+                accessibilityLabel={`Play ${module.title}, ${variant.title}`}
+                style={{ marginTop: theme.spacing.md }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyStrong">{variant.title}</Text>
+                    <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
+                      {variant.subtitle}
+                    </Text>
+                  </View>
+                  <Text variant="caption" tone="faint">
+                    {'★'.repeat(variant.difficulty)}
+                  </Text>
+                </View>
+              </Card>
+            );
+          })}
+        </View>
+      ))}
 
       {/* Roadmap */}
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>

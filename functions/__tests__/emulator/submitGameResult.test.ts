@@ -258,6 +258,52 @@ describe('submitGameResult — trust boundary', () => {
   });
 });
 
+describe('submitGameResult — a second game module', () => {
+  it('records a memory game through the same transaction, unchanged', async () => {
+    let clock = NOW - 90_000;
+    const session = new GameSession({
+      sessionId: `${UID}_memory_1`,
+      moduleId: 'memory-grid',
+      variantId: 'standard',
+      mode: 'classic',
+      seed: 'classic:player-1:memory-grid:standard:3',
+      now: () => {
+        const at = clock;
+        clock += 3_000;
+        return at;
+      },
+    });
+
+    const { sequence } = session.getState<{ sequence: number[] }>();
+    for (const tile of sequence) session.submit({ tile });
+    const result = session.toResult();
+
+    const response = (await call(result)) as unknown as { status: string; score: number };
+    expect(response.status).toBe('recorded');
+    expect(response.score).toBeGreaterThan(0);
+
+    const profile = (await db.doc(`profiles/${UID}`).get()).data() as UserProfile;
+    expect(profile.modules['memory-grid']?.won).toBe(1);
+    expect(profile.modules['number-logic']).toBeUndefined();
+
+    const stored = await db.doc(`profiles/${UID}/sessions/${result.sessionId}`).get();
+    expect(stored.data()?.moduleId).toBe('memory-grid');
+    expect(stored.data()?.solution).toBe(sequence.join('-'));
+
+    // Not a daily game: no daily entry, no daily board, no challenge stats.
+    expect((await db.collection(`profiles/${UID}/dailyEntries`).get()).size).toBe(0);
+    expect((await db.doc(`leaderboards/${CHALLENGE_ID}/entries/${UID}`).get()).exists).toBe(false);
+    // But it does count toward XP, so it reaches the global board.
+    expect((await db.doc(`leaderboards/global/entries/${UID}`).get()).data()?.score).toBe(
+      profile.xp,
+    );
+  });
+
+  afterEach(async () => {
+    await db.doc(`profiles/${UID}/sessions/${UID}_memory_1`).delete();
+  });
+});
+
 describe('submitGameResult — repeat players', () => {
   it('folds a second game into the existing profile rather than resetting it', async () => {
     await call(playDaily());

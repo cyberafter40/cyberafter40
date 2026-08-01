@@ -78,6 +78,28 @@ export const BADGES: BadgeDefinition[] = [
     check: ({ result }) => result.outcome.status === 'won' && result.variantId === 'four-digit',
   },
   {
+    id: 'total_recall',
+    title: 'Total Recall',
+    description: 'Rebuild a memory sequence without a single mistake.',
+    icon: '🧠',
+    tier: 'gold',
+    // Keyed off moduleId and an engine metric — the pattern that lets badges
+    // exist for games the progress engine knows nothing about.
+    check: ({ result }) =>
+      result.moduleId === 'memory-grid' &&
+      result.outcome.status === 'won' &&
+      result.outcome.metrics.mistakes === 0,
+  },
+  {
+    id: 'polymath',
+    title: 'Polymath',
+    description: 'Win a game in two different training modules.',
+    icon: '🎓',
+    tier: 'silver',
+    check: ({ profile }) =>
+      Object.values(profile.modules).filter((module) => module.won > 0).length >= 2,
+  },
+  {
     id: 'streak_3',
     title: 'Warming Up',
     description: 'Play three days in a row.',
