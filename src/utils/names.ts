@@ -1,4 +1,5 @@
 import { createRng } from '@/engine/rng';
+import type { TranslationKey, TranslationParams } from '@/i18n/types';
 
 /**
  * Friendly default display names.
@@ -38,9 +39,17 @@ export function normaliseDisplayName(input: string): string {
   return printable.replace(/\s+/g, ' ').trim().slice(0, DISPLAY_NAME_MAX);
 }
 
-export function validateDisplayName(input: string): string | null {
+/** A rejection reason, as a translation key — this module has no UI language. */
+export interface NameError {
+  key: TranslationKey;
+  params?: TranslationParams;
+}
+
+export function validateDisplayName(input: string): NameError | null {
   const name = normaliseDisplayName(input);
-  if (name.length < DISPLAY_NAME_MIN) return 'Pick a name with at least 2 characters.';
-  if (name.length > DISPLAY_NAME_MAX) return `Keep it under ${DISPLAY_NAME_MAX} characters.`;
+  if (name.length < DISPLAY_NAME_MIN) return { key: 'authError.nameTooShort' };
+  if (name.length > DISPLAY_NAME_MAX) {
+    return { key: 'authError.nameTooLong', params: { max: DISPLAY_NAME_MAX } };
+  }
   return null;
 }

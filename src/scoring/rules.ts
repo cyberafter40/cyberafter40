@@ -8,17 +8,18 @@ import type { ScoringRule } from './types';
 /** Flat award for finishing, scaled by the variant's difficulty. */
 export const baseCompletionRule: ScoringRule = {
   id: 'base',
-  label: 'Solved',
+  name: 'Solved',
   applies: (ctx) => ctx.result.outcome.status === 'won',
   evaluate: (ctx) => {
     const { basePoints, difficultyStep } = ctx.module;
     const steps = ctx.result.difficulty - 1;
     return {
       id: 'base',
-      label: 'Solved',
+      labelKey: 'scoring.base',
       kind: 'add',
       value: Math.round(basePoints * (1 + steps * difficultyStep)),
-      detail: `${ctx.result.difficulty}★ difficulty`,
+      detailKey: 'scoring.baseDetail',
+      detailParams: { difficulty: ctx.result.difficulty },
     };
   },
 };
@@ -26,14 +27,14 @@ export const baseCompletionRule: ScoringRule = {
 /** Consolation points so a lost game still shows progress. */
 export const participationRule: ScoringRule = {
   id: 'participation',
-  label: 'Attempt',
+  name: 'Attempt',
   applies: (ctx) => ctx.result.outcome.status !== 'won',
   evaluate: (ctx) => ({
     id: 'participation',
-    label: 'Attempt',
+    labelKey: 'scoring.participation',
     kind: 'add',
     value: ctx.result.outcome.status === 'abandoned' ? 5 : 15,
-    detail: 'Every attempt trains the pattern',
+    detailKey: 'scoring.participationDetail',
   }),
 };
 
@@ -43,7 +44,7 @@ export const participationRule: ScoringRule = {
  */
 export const moveEfficiencyRule: ScoringRule = {
   id: 'efficiency',
-  label: 'Efficiency',
+  name: 'Efficiency',
   applies: (ctx) => ctx.result.outcome.status === 'won',
   evaluate: (ctx) => {
     const { movesUsed, maxMoves } = ctx.result.outcome;
@@ -52,10 +53,11 @@ export const moveEfficiencyRule: ScoringRule = {
     const fraction = saved / maxMoves;
     return {
       id: 'efficiency',
-      label: 'Efficiency',
+      labelKey: 'scoring.efficiency',
       kind: 'add',
       value: Math.round(fraction * 120),
-      detail: `${saved} attempt${saved === 1 ? '' : 's'} to spare`,
+      detailKey: 'scoring.efficiencyDetail',
+      detailParams: { count: saved },
     };
   },
 };
@@ -66,14 +68,15 @@ export const moveEfficiencyRule: ScoringRule = {
  */
 export const deductionRule: ScoringRule = {
   id: 'deduction',
-  label: 'Deduction',
+  name: 'Deduction',
   applies: (ctx) => ctx.result.outcome.status === 'won' && ctx.result.outcome.accuracy > 0,
   evaluate: (ctx) => ({
     id: 'deduction',
-    label: 'Deduction',
+    labelKey: 'scoring.deduction',
     kind: 'add',
     value: Math.round(ctx.result.outcome.accuracy * 80),
-    detail: `${Math.round(ctx.result.outcome.accuracy * 100)}% information per guess`,
+    detailKey: 'scoring.deductionDetail',
+    detailParams: { percent: Math.round(ctx.result.outcome.accuracy * 100) },
   }),
 };
 
@@ -84,7 +87,7 @@ export const deductionRule: ScoringRule = {
 export function timeBonusRule(parMs: number, maxBonus = 60): ScoringRule {
   return {
     id: 'speed',
-    label: 'Speed',
+    name: 'Speed',
     applies: (ctx) => ctx.result.outcome.status === 'won',
     evaluate: (ctx) => {
       const { durationMs } = ctx.result.outcome;
@@ -92,10 +95,14 @@ export function timeBonusRule(parMs: number, maxBonus = 60): ScoringRule {
       const fraction = 1 - durationMs / parMs;
       return {
         id: 'speed',
-        label: 'Speed',
+        labelKey: 'scoring.speed',
         kind: 'add',
         value: Math.round(fraction * maxBonus),
-        detail: `${Math.round(durationMs / 1000)}s (par ${Math.round(parMs / 1000)}s)`,
+        detailKey: 'scoring.speedDetail',
+        detailParams: {
+          seconds: Math.round(durationMs / 1000),
+          par: Math.round(parMs / 1000),
+        },
       };
     },
   };
@@ -104,14 +111,14 @@ export function timeBonusRule(parMs: number, maxBonus = 60): ScoringRule {
 /** Daily Challenge results are worth more than free-play. */
 export const dailyChallengeRule: ScoringRule = {
   id: 'daily',
-  label: 'Daily Challenge',
+  name: 'Daily Challenge',
   applies: (ctx) => ctx.result.mode === 'daily' && ctx.result.outcome.status === 'won',
   evaluate: () => ({
     id: 'daily',
-    label: 'Daily Challenge',
+    labelKey: 'scoring.daily',
     kind: 'multiply',
     value: 1.5,
-    detail: 'Same puzzle for everyone today',
+    detailKey: 'scoring.dailyDetail',
   }),
 };
 
@@ -122,17 +129,18 @@ export const dailyChallengeRule: ScoringRule = {
 export function streakRule(perDay = 0.03, cap = 1.5): ScoringRule {
   return {
     id: 'streak',
-    label: 'Streak',
+    name: 'Streak',
     applies: (ctx) => ctx.player.currentStreak > 0 && ctx.result.outcome.status === 'won',
     evaluate: (ctx) => {
       const multiplier = Math.min(cap, 1 + ctx.player.currentStreak * perDay);
       if (multiplier <= 1) return null;
       return {
         id: 'streak',
-        label: 'Streak',
+        labelKey: 'scoring.streak',
         kind: 'multiply',
         value: Number(multiplier.toFixed(2)),
-        detail: `${ctx.player.currentStreak}-day streak`,
+        detailKey: 'scoring.streakDetail',
+        detailParams: { count: ctx.player.currentStreak },
       };
     },
   };
@@ -141,13 +149,13 @@ export function streakRule(perDay = 0.03, cap = 1.5): ScoringRule {
 /** Perfect games — solved on the first move — get a distinct flourish. */
 export const firstTryRule: ScoringRule = {
   id: 'first_try',
-  label: 'First try',
+  name: 'First try',
   applies: (ctx) => ctx.result.outcome.status === 'won' && ctx.result.outcome.movesUsed === 1,
   evaluate: () => ({
     id: 'first_try',
-    label: 'First try',
+    labelKey: 'scoring.firstTry',
     kind: 'add',
     value: 100,
-    detail: 'Called it immediately',
+    detailKey: 'scoring.firstTryDetail',
   }),
 };

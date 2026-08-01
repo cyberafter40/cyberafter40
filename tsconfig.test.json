@@ -28,7 +28,8 @@
     "src/progress/**/*.ts",
     "src/games/**/*.ts",
     "src/daily/**/*.ts",
-    "src/utils/**/*.ts"
+    "src/utils/**/*.ts",
+    "src/i18n/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

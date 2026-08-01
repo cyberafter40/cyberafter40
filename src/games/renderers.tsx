@@ -1,6 +1,7 @@
 import React, { type ComponentType } from 'react';
 import { View } from 'react-native';
 import type { UseGameSessionValue } from '@/state/useGameSession';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { EmptyState } from '@/ui/components';
 import { MemoryGridBoard } from './memoryGrid/MemoryGridBoard';
 import { NumberPadBoard } from './numberLogic/NumberPadBoard';
@@ -21,13 +22,10 @@ export interface GameRendererProps {
 }
 
 function UnavailableBoard() {
+  const { t } = useTranslation();
   return (
     <View style={{ flex: 1, justifyContent: 'center' }}>
-      <EmptyState
-        icon="🚧"
-        title="Not ready yet"
-        message="This training module is on the roadmap. Its engine has not shipped in this build."
-      />
+      <EmptyState icon="🚧" title={t('unavailable.title')} message={t('unavailable.body')} />
     </View>
   );
 }

@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
+import { t } from '@/i18n';
 
 interface Props {
   children: ReactNode;
@@ -50,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <Text
           style={{ color: '#F3F5F8', fontSize: 20, fontWeight: '700', textAlign: 'center' }}
         >
-          Something broke
+          {t('errorBoundary.title')}
         </Text>
         <Text
           style={{
@@ -61,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
             lineHeight: 22,
           }}
         >
-          Your progress is safe. Tap below to reload the app.
+          {t('errorBoundary.body')}
         </Text>
         <Text
           accessibilityRole="button"
@@ -78,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
             marginTop: 28,
           }}
         >
-          Reload
+          {t('errorBoundary.reload')}
         </Text>
       </View>
     );

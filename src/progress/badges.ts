@@ -1,4 +1,5 @@
 import type { GameResult } from '@/engine/session';
+import type { TranslationKey } from '@/i18n/types';
 import type { ScoreBreakdown } from '@/scoring/types';
 import type { UserProfile } from './types';
 
@@ -24,8 +25,9 @@ export interface BadgeContext {
 
 export interface BadgeDefinition {
   id: string;
-  title: string;
-  description: string;
+  /** Translation key for the badge name, e.g. `badge.firstLight`. */
+  titleKey: TranslationKey;
+  descriptionKey: TranslationKey;
   icon: string;
   tier: BadgeTier;
   /** Hidden badges are shown as "???" until unlocked. */
@@ -36,24 +38,24 @@ export interface BadgeDefinition {
 export const BADGES: BadgeDefinition[] = [
   {
     id: 'first_light',
-    title: 'First Light',
-    description: 'Complete your first game.',
+    titleKey: 'badge.firstLight',
+    descriptionKey: 'badge.firstLightBody',
     icon: '🌱',
     tier: 'bronze',
     check: ({ profile }) => profile.stats.played >= 1,
   },
   {
     id: 'clean_read',
-    title: 'Clean Read',
-    description: 'Solve a code on your very first guess.',
+    titleKey: 'badge.cleanRead',
+    descriptionKey: 'badge.cleanReadBody',
     icon: '🎯',
     tier: 'gold',
     check: ({ result }) => result.outcome.status === 'won' && result.outcome.movesUsed === 1,
   },
   {
     id: 'efficient_mind',
-    title: 'Efficient Mind',
-    description: 'Win using no more than half of your guesses.',
+    titleKey: 'badge.efficientMind',
+    descriptionKey: 'badge.efficientMindBody',
     icon: '⚡',
     tier: 'silver',
     check: ({ result }) =>
@@ -62,8 +64,8 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'deep_end',
-    title: 'The Deep End',
-    description: 'Solve a three-digit code.',
+    titleKey: 'badge.deepEnd',
+    descriptionKey: 'badge.deepEndBody',
     icon: '🧩',
     tier: 'silver',
     check: ({ result }) =>
@@ -71,16 +73,16 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'four_dimensional',
-    title: 'Four Dimensional',
-    description: 'Solve a four-digit code.',
+    titleKey: 'badge.fourDimensional',
+    descriptionKey: 'badge.fourDimensionalBody',
     icon: '🔷',
     tier: 'gold',
     check: ({ result }) => result.outcome.status === 'won' && result.variantId === 'four-digit',
   },
   {
     id: 'total_recall',
-    title: 'Total Recall',
-    description: 'Rebuild a memory sequence without a single mistake.',
+    titleKey: 'badge.totalRecall',
+    descriptionKey: 'badge.totalRecallBody',
     icon: '🧠',
     tier: 'gold',
     // Keyed off moduleId and an engine metric — the pattern that lets badges
@@ -92,8 +94,8 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'polymath',
-    title: 'Polymath',
-    description: 'Win a game in two different training modules.',
+    titleKey: 'badge.polymath',
+    descriptionKey: 'badge.polymathBody',
     icon: '🎓',
     tier: 'silver',
     check: ({ profile }) =>
@@ -101,80 +103,80 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'streak_3',
-    title: 'Warming Up',
-    description: 'Play three days in a row.',
+    titleKey: 'badge.streak3',
+    descriptionKey: 'badge.streak3Body',
     icon: '🔥',
     tier: 'bronze',
     check: ({ profile }) => profile.streak.current >= 3,
   },
   {
     id: 'streak_7',
-    title: 'Seven Straight',
-    description: 'Keep a seven-day streak.',
+    titleKey: 'badge.streak7',
+    descriptionKey: 'badge.streak7Body',
     icon: '🔥',
     tier: 'silver',
     check: ({ profile }) => profile.streak.current >= 7,
   },
   {
     id: 'streak_30',
-    title: 'Unbroken',
-    description: 'Keep a thirty-day streak.',
+    titleKey: 'badge.streak30',
+    descriptionKey: 'badge.streak30Body',
     icon: '💎',
     tier: 'platinum',
     check: ({ profile }) => profile.streak.current >= 30,
   },
   {
     id: 'daily_10',
-    title: 'Regular',
-    description: 'Complete ten Daily Challenges.',
+    titleKey: 'badge.daily10',
+    descriptionKey: 'badge.daily10Body',
     icon: '📅',
     tier: 'bronze',
     check: ({ profile }) => profile.stats.dailyCompleted >= 10,
   },
   {
     id: 'daily_100',
-    title: 'Devoted',
-    description: 'Complete one hundred Daily Challenges.',
+    titleKey: 'badge.daily100',
+    descriptionKey: 'badge.daily100Body',
     icon: '🏛️',
     tier: 'platinum',
     check: ({ profile }) => profile.stats.dailyCompleted >= 100,
   },
   {
     id: 'centurion',
-    title: 'Centurion',
-    description: 'Play one hundred games.',
+    titleKey: 'badge.centurion',
+    descriptionKey: 'badge.centurionBody',
     icon: '💯',
     tier: 'gold',
     check: ({ profile }) => profile.stats.played >= 100,
   },
   {
     id: 'level_10',
-    title: 'Logic Explorer',
-    description: 'Reach level 10.',
+    titleKey: 'badge.level10',
+    descriptionKey: 'badge.level10Body',
     icon: '🧭',
     tier: 'silver',
     check: ({ profile }) => profile.level >= 10,
   },
   {
     id: 'level_25',
-    title: 'Cipher Adept',
-    description: 'Reach level 25.',
+    titleKey: 'badge.level25',
+    descriptionKey: 'badge.level25Body',
     icon: '🗝️',
     tier: 'gold',
     check: ({ profile }) => profile.level >= 25,
   },
   {
     id: 'level_50',
-    title: 'Mind Master',
-    description: 'Reach level 50.',
+    titleKey: 'badge.level50',
+    descriptionKey: 'badge.level50Body',
     icon: '👑',
     tier: 'platinum',
     check: ({ profile }) => profile.level >= 50,
   },
   {
     id: 'quick_thinker',
-    title: 'Quick Thinker',
-    description: 'Solve a code in under twenty seconds.',
+    titleKey: 'badge.quickThinker',
+    descriptionKey: 'badge.quickThinkerBody',
     icon: '⏱️',
     tier: 'silver',
     check: ({ result }) =>
@@ -182,16 +184,16 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'win_run_10',
-    title: 'On A Roll',
-    description: 'Win ten games in a row.',
+    titleKey: 'badge.winRun10',
+    descriptionKey: 'badge.winRun10Body',
     icon: '🎲',
     tier: 'gold',
     check: ({ profile }) => profile.stats.currentWinRun >= 10,
   },
   {
     id: 'night_owl',
-    title: 'Night Owl',
-    description: 'Finish a game between midnight and 5am.',
+    titleKey: 'badge.nightOwl',
+    descriptionKey: 'badge.nightOwlBody',
     icon: '🦉',
     tier: 'bronze',
     secret: true,
@@ -199,8 +201,8 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'early_bird',
-    title: 'Early Bird',
-    description: 'Finish a game before 7am.',
+    titleKey: 'badge.earlyBird',
+    descriptionKey: 'badge.earlyBirdBody',
     icon: '🌅',
     tier: 'bronze',
     secret: true,
@@ -208,8 +210,8 @@ export const BADGES: BadgeDefinition[] = [
   },
   {
     id: 'comeback',
-    title: 'Comeback',
-    description: 'Win a game right after losing one.',
+    titleKey: 'badge.comeback',
+    descriptionKey: 'badge.comebackBody',
     icon: '↩️',
     tier: 'bronze',
     secret: true,

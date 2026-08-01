@@ -108,8 +108,15 @@ then secrets — so the wall reads as an achievement record, not a to-do list.
 Secret badges show as `❔` until earned.
 
 ### Settings — `SettingsScreen.tsx`
-Display name, avatar picker, haptics / reduced motion / daily reminder toggles,
-account state, sign out, **delete account**, and legal links.
+Display name, avatar picker, **language**, haptics / reduced motion / daily
+reminder toggles, account state, sign out, **delete account**, and legal links.
+
+Language is its own section rather than a row inside Preferences: a player whose
+app opened in the wrong language has to be able to find it without reading
+anything, and a labelled block of names written in their own script
+("English", "Türkçe") is the one control that still works when every other word
+on screen is foreign. The choice persists to the profile document, so it follows
+the account to a new device.
 
 ### Auth — `AuthScreen.tsx`
 Reached voluntarily, never as a gate. Copy is explicit that an account is about
@@ -137,7 +144,7 @@ player has been protecting.
 
 ## Testing
 
-`npm run test:ui` — 55 tests over three files, needing no emulator or network:
+`npm run test:ui` — 61 tests over three files, needing no emulator or network:
 
 - **`components.test.tsx`** — reachability and communication: roles, labels,
   disabled states, the score pill's sign. Pixel styling is deliberately not
@@ -162,6 +169,8 @@ and streak derivation, statistics and the engines all run for real.
   win/loss states use glyphs as well as hue
 - A reduced-motion setting is exposed in Settings
 - Text uses relative sizing and wraps rather than truncating
+- Accessibility labels are translated too — a screen reader in Turkish reads
+  Turkish, including badge and rank names that come from data tables
 - Every composite that carries its own label sets `accessible`, so a screen
   reader announces the composed sentence rather than each child fragment. The
   UI suite enforces this by querying through `getByRole`, which only matches

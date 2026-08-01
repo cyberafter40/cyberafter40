@@ -16,6 +16,7 @@
  *    Firestore and resumed on another device.
  */
 
+import type { TranslationKey, TranslationParams } from '@/i18n/types';
 import type { Rng } from './rng';
 
 export type GameCategory =
@@ -30,19 +31,33 @@ export type GameMode = 'classic' | 'daily' | 'practice';
 
 export type GameStatus = 'in_progress' | 'won' | 'lost' | 'abandoned';
 
-/** Result of checking a move before it is applied. */
+/**
+ * Result of checking a move before it is applied.
+ *
+ * Rejections carry a translation key, never a sentence: engines are pure and
+ * replayed server-side, and neither a pure function nor a Cloud Function has any
+ * business deciding what language a player reads.
+ */
 export interface MoveValidation {
   ok: boolean;
   /** Machine-readable code, e.g. `length_mismatch`. */
   code?: string;
-  /** Human-readable message shown in the UI. */
-  message?: string;
+  /** Key for the message shown in the UI; the renderer translates it. */
+  messageKey?: TranslationKey;
+  /** Values interpolated into the message, e.g. `{ digits: 3 }`. */
+  messageParams?: TranslationParams;
 }
 
 export const VALID: MoveValidation = { ok: true };
 
-export function invalid(code: string, message: string): MoveValidation {
-  return { ok: false, code, message };
+export function invalid(
+  code: string,
+  messageKey: TranslationKey,
+  messageParams?: TranslationParams,
+): MoveValidation {
+  return messageParams
+    ? { ok: false, code, messageKey, messageParams }
+    : { ok: false, code, messageKey };
 }
 
 export interface ApplyMoveResult<TState, TFeedback> {
@@ -128,8 +143,9 @@ export interface GameEngine<
 /** One difficulty/shape option inside a module, e.g. "3 digits". */
 export interface GameVariant<TConfig = unknown> {
   id: string;
-  title: string;
-  subtitle: string;
+  /** Translation key for the display name, e.g. `variants.twoDigit`. */
+  titleKey: TranslationKey;
+  subtitleKey: TranslationKey;
   config: TConfig;
   /** 1 (easiest) .. 5. Feeds the scoring engine's difficulty multiplier. */
   difficulty: 1 | 2 | 3 | 4 | 5;
@@ -148,8 +164,9 @@ export interface GameModule<
   TConfig = unknown,
 > {
   id: string;
-  title: string;
-  tagline: string;
+  /** Translation key for the display name, e.g. `modules.numberLogic`. */
+  titleKey: TranslationKey;
+  taglineKey: TranslationKey;
   category: GameCategory;
   /** Emoji or icon token used by the UI. */
   icon: string;

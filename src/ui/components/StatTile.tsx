@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '../ThemeProvider';
 import { Text } from './Text';
 
@@ -15,12 +16,17 @@ export interface StatTileProps {
 /** Compact metric block used across the profile and result screens. */
 export function StatTile({ label, value, hint, accent = false, style }: StatTileProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <View
       accessible
       accessibilityRole="summary"
-      accessibilityLabel={`${label}: ${value}${hint ? `, ${hint}` : ''}`}
+      accessibilityLabel={
+        hint
+          ? t('a11y.statTileWithHint', { label, value, hint })
+          : t('a11y.statTile', { label, value })
+      }
       style={[
         styles.tile,
         {

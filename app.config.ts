@@ -34,6 +34,12 @@ const config: ExpoConfig = {
     infoPlist: {
       CFBundleDisplayName: 'MindCode',
       ITSAppUsesNonExemptEncryption: false,
+      // iOS filters `Locale.preferredLanguages` — which is what
+      // expo-localization reads — against the localizations an app *declares*.
+      // Without this, a Turkish device reports `en` and "Match device" silently
+      // never resolves to Turkish, no matter how complete the catalogue is.
+      // Keep in step with SUPPORTED_LOCALES in src/i18n/types.ts.
+      CFBundleLocalizations: ['en', 'tr'],
     },
   },
   android: {

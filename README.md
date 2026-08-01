@@ -34,7 +34,8 @@ Working out which is the game.
 | **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic free play |
 | **Progression** | XP, 50 levels with titles, 21 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 255 tests — 102 domain · 55 UI · 31 result validation · 60 emulator (rules + functions) · 7 end-to-end (real app, real backend) |
+| **Languages** | English and Turkish, fully — every string, including game and badge names |
+| **Tests** | 277 tests — 117 domain · 61 UI · 31 result validation · 60 emulator (rules + functions) · 8 end-to-end (real app, real backend) |
 | **CI** | GitHub Actions — typecheck, lint and all five suites on every push |
 
 ### Documentation
@@ -61,8 +62,8 @@ fail on launch — see [`docs/DEPLOYMENT_APPSTORE.md`](docs/DEPLOYMENT_APPSTORE.
 for the ten-minute project setup.
 
 ```bash
-npm test          # 102 domain tests — no emulator or network needed
-npm run test:ui   # 55 UI tests — real components, real engines, mocked network
+npm test          # 117 domain tests — no emulator or network needed
+npm run test:ui   # 61 UI tests — real components, real engines, mocked network
 npm run typecheck # full app type check
 npm run lint
 ```
@@ -110,7 +111,11 @@ two existing ones. `__tests__/platform.test.ts` keeps the claim honest.
 
 Those same pure modules are compiled into the Cloud Functions, so the server
 replays every submitted game with byte-identical logic instead of a
-re-implementation that could drift.
+re-implementation that could drift. It is also why **no layer below the screens
+holds a sentence**: modules, variants, badges, ranks, feedback policies, scoring
+rules and engine rejections all carry a `TranslationKey`, and only the rendering
+component turns it into words. A backend has no business deciding what language
+a player reads.
 
 ```
 src/
@@ -121,10 +126,29 @@ src/
   daily/      deterministic Daily Challenge derivation (shared with backend)
   services/   Firebase: auth, Firestore repositories, analytics, offline queue
   state/      React contexts and hooks
+  i18n/       type-checked message catalogues (en, tr) and the tiny runtime
   ui/         design tokens and components
   screens/    the nine screens
 functions/    submitGameResult · deleteAccount · provisionDailyChallenges
 ```
+
+---
+
+## Languages
+
+The app ships in English and Turkish, and "fully" is enforced rather than
+audited: [`src/i18n/tr.ts`](src/i18n/tr.ts) is typed against the English
+catalogue, so a missing or misspelled key **fails the build** rather than
+leaving a blank on screen. What types cannot check — extra keys, dropped
+`{placeholders}`, plural forms — is covered by
+[`__tests__/i18n.test.ts`](__tests__/i18n.test.ts), and screens are rendered in
+Turkish in the UI suite because a complete catalogue proves nothing about a
+component that interpolated its own English.
+
+Plural selection is per-locale, not English's rule applied everywhere: Turkish
+does not inflect a noun after a numeral ("3 tahmin", never "3 tahminler"), so
+its rule always returns `other`. Adding a language means adding one file and one
+plural rule; nothing else in the app changes.
 
 ---
 

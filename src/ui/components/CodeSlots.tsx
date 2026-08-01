@@ -6,6 +6,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '../ThemeProvider';
 import { Text } from './Text';
 
@@ -35,6 +36,7 @@ export function CodeSlots({
   size = 'regular',
 }: CodeSlotsProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const offset = useSharedValue(0);
 
   useEffect(() => {
@@ -61,8 +63,8 @@ export function CodeSlots({
       accessibilityRole="text"
       accessibilityLabel={
         value.length === 0
-          ? `Empty code, ${length} digits`
-          : `Entered ${value.split('').join(' ')}`
+          ? t('a11y.emptyCode', { digits: length })
+          : t('a11y.enteredCode', { digits: value.split('').join(' ') })
       }
     >
       {Array.from({ length }).map((_, index) => {

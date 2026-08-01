@@ -206,7 +206,9 @@ function trackCompletion(
   }
 
   for (const event of events) {
-    if (event.type === 'level_up') track('level_up', { level: event.to, title: event.title });
+    // The analytics key is the stable identifier, not the rendered name — a
+    // funnel must not split because a player switched language.
+    if (event.type === 'level_up') track('level_up', { level: event.to, rank: event.titleKey });
     if (event.type === 'badge_unlocked') track('badge_unlocked', { badgeId: event.badgeId });
     if (event.type === 'streak_extended') track('streak_extended', { current: event.current });
     if (event.type === 'streak_broken') track('streak_broken', { previous: event.previous });

@@ -1,4 +1,5 @@
 import type { GameEngine, GameModule } from '@/engine/types';
+import type { TranslationKey } from '@/i18n/types';
 import { standardScoringProfile } from '@/scoring/profiles';
 
 /**
@@ -36,17 +37,17 @@ function notImplementedEngine(id: string): GameEngine<never, never, never, never
 
 function roadmapModule(input: {
   id: string;
-  title: string;
-  tagline: string;
+  titleKey: TranslationKey;
+  taglineKey: TranslationKey;
   category: GameModule['category'];
   icon: string;
-  variantTitle: string;
-  variantSubtitle: string;
+  variantTitleKey: TranslationKey;
+  variantSubtitleKey: TranslationKey;
 }): GameModule {
   return {
     id: input.id,
-    title: input.title,
-    tagline: input.tagline,
+    titleKey: input.titleKey,
+    taglineKey: input.taglineKey,
     category: input.category,
     icon: input.icon,
     status: 'coming_soon',
@@ -54,8 +55,8 @@ function roadmapModule(input: {
     variants: [
       {
         id: 'standard',
-        title: input.variantTitle,
-        subtitle: input.variantSubtitle,
+        titleKey: input.variantTitleKey,
+        subtitleKey: input.variantSubtitleKey,
         config: {},
         difficulty: 3,
         unlocksAtLevel: 0,
@@ -70,32 +71,32 @@ function roadmapModule(input: {
 
 export const patternModule = roadmapModule({
   id: 'pattern-sense',
-  title: 'Pattern Sense',
-  tagline: 'Find the rule, predict what comes next.',
+  titleKey: 'modules.patternSense',
+  taglineKey: 'modules.patternSenseTagline',
   category: 'pattern',
   icon: '🔺',
-  variantTitle: 'Sequence',
-  variantSubtitle: 'Numeric and visual progressions.',
+  variantTitleKey: 'variants.sequence',
+  variantSubtitleKey: 'variants.sequenceSubtitle',
 });
 
 export const reactionModule = roadmapModule({
   id: 'reaction-lab',
-  title: 'Reaction Lab',
-  tagline: 'Measure how fast your decisions actually are.',
+  titleKey: 'modules.reactionLab',
+  taglineKey: 'modules.reactionLabTagline',
   category: 'reaction',
   icon: '⚡',
-  variantTitle: 'Go / No-Go',
-  variantSubtitle: 'Respond to the right signal, ignore the rest.',
+  variantTitleKey: 'variants.goNoGo',
+  variantSubtitleKey: 'variants.goNoGoSubtitle',
 });
 
 export const reasoningModule = roadmapModule({
   id: 'deduction-room',
-  title: 'Deduction Room',
-  tagline: 'Short logic puzzles with one consistent answer.',
+  titleKey: 'modules.deductionRoom',
+  taglineKey: 'modules.deductionRoomTagline',
   category: 'reasoning',
   icon: '🗝️',
-  variantTitle: 'Constraints',
-  variantSubtitle: 'Eliminate the impossible.',
+  variantTitleKey: 'variants.constraints',
+  variantSubtitleKey: 'variants.constraintsSubtitle',
 });
 
 export const upcomingModules: GameModule[] = [

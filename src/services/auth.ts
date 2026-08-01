@@ -11,6 +11,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
+import type { TranslationKey } from '@/i18n/types';
 import { getFirebaseAuth, getFirebaseFunctions } from './firebase';
 
 /**
@@ -120,26 +121,32 @@ export async function deleteAccount(): Promise<void> {
 }
 
 /** Human-readable messages for the Firebase auth error codes we surface. */
-export function describeAuthError(error: unknown): string {
+/**
+ * Maps a Firebase auth error code to a translation key.
+ *
+ * A key rather than a sentence: this is a service, and services do not know
+ * which language the player reads. The screen translates it.
+ */
+export function describeAuthError(error: unknown): TranslationKey {
   const code = (error as { code?: string } | null)?.code ?? '';
   switch (code) {
     case 'auth/invalid-email':
-      return 'That email address does not look right.';
+      return 'authError.invalidEmail';
     case 'auth/email-already-in-use':
-      return 'An account already exists for that email.';
+      return 'authError.emailInUse';
     case 'auth/weak-password':
-      return 'Choose a password of at least 6 characters.';
+      return 'authError.weakPassword';
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/user-not-found':
-      return 'Email or password is incorrect.';
+      return 'authError.wrongCredentials';
     case 'auth/too-many-requests':
-      return 'Too many attempts. Try again in a few minutes.';
+      return 'authError.tooManyRequests';
     case 'auth/network-request-failed':
-      return 'No connection. Your progress is saved on this device.';
+      return 'authError.networkFailed';
     case 'auth/requires-recent-login':
-      return 'Please sign in again before deleting your account.';
+      return 'authError.recentLogin';
     default:
-      return 'Something went wrong. Please try again.';
+      return 'authError.generic';
   }
 }

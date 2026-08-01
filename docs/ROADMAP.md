@@ -80,6 +80,16 @@ at launch scale; a rolled-up top-N document is the fix, sketched in
 façade is in place and the adapter is ten lines
 ([DEPLOYMENT_APPSTORE.md §3](DEPLOYMENT_APPSTORE.md#3-native-analytics-optional-but-recommended)).
 
+**Two languages.** English and Turkish, both complete and build-enforced. A
+third is one catalogue file plus one plural rule — but locales with more than
+two plural forms (Polish, Arabic, Russian) will need `pluralRules` in
+`src/i18n/index.ts` to return more than `one | other`, and the `PluralForms`
+shape to widen with them. The seam is there; it has not been exercised.
+
+**No right-to-left support.** Nothing in the layout assumes LTR *deliberately*,
+but nothing has been tested against `I18nManager.forceRTL` either. Adding Arabic
+or Hebrew means an RTL pass over every screen, not just a catalogue file.
+
 **Placeholder artwork.** `assets/` holds generated geometric placeholders.
 Replace before submission — Apple rejects placeholder icons.
 
@@ -93,7 +103,7 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**Index requirements are unverified.** 255 tests now cover the domain layers,
+**Index requirements are unverified.** 277 tests now cover the domain layers,
 server-side replay, `firestore.rules` and all three Cloud Functions — but the
 Firestore emulator does not enforce indexes, so no test can prove a query will
 work against a real project. `deleteAccount`'s collection-group sweep over

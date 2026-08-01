@@ -7,6 +7,8 @@
  * be believable.
  */
 
+import type { TranslationKey } from '@/i18n/types';
+
 export const MAX_LEVEL = 50;
 
 /** Cumulative XP required to *reach* `level`. Level 1 costs nothing. */
@@ -27,7 +29,8 @@ export function levelForXp(xp: number): number {
 
 export interface LevelProgress {
   level: number;
-  title: string;
+  /** Translation key for the rank name, e.g. `rank.logicExplorer`. */
+  titleKey: TranslationKey;
   /** XP earned inside the current level. */
   xpIntoLevel: number;
   /** XP the current level spans. 0 once MAX_LEVEL is reached. */
@@ -46,7 +49,7 @@ export function describeLevel(xp: number): LevelProgress {
 
   return {
     level,
-    title: levelTitle(level),
+    titleKey: levelTitleKey(level),
     xpIntoLevel: Math.max(0, xp - floor),
     xpForNextLevel: isMaxLevel ? 0 : ceiling - floor,
     ratio: isMaxLevel ? 1 : Math.min(1, Math.max(0, (xp - floor) / span)),
@@ -55,33 +58,38 @@ export function describeLevel(xp: number): LevelProgress {
 }
 
 /** Ranks are inclusive-from `minLevel` up to the next entry. */
-export const LEVEL_TITLES: { minLevel: number; title: string }[] = [
-  { minLevel: 1, title: 'Beginner' },
-  { minLevel: 3, title: 'Curious Mind' },
-  { minLevel: 5, title: 'Pattern Seeker' },
-  { minLevel: 8, title: 'Deductor' },
-  { minLevel: 10, title: 'Logic Explorer' },
-  { minLevel: 14, title: 'Codebreaker' },
-  { minLevel: 18, title: 'Analyst' },
-  { minLevel: 22, title: 'Strategist' },
-  { minLevel: 26, title: 'Cipher Adept' },
-  { minLevel: 30, title: 'Mind Architect' },
-  { minLevel: 35, title: 'Grandmaster of Logic' },
-  { minLevel: 40, title: 'Cognitive Elite' },
-  { minLevel: 45, title: 'Oracle' },
-  { minLevel: 50, title: 'Mind Master' },
+export interface LevelTitle {
+  minLevel: number;
+  titleKey: TranslationKey;
+}
+
+export const LEVEL_TITLES: LevelTitle[] = [
+  { minLevel: 1, titleKey: 'rank.beginner' },
+  { minLevel: 3, titleKey: 'rank.curiousMind' },
+  { minLevel: 5, titleKey: 'rank.patternSeeker' },
+  { minLevel: 8, titleKey: 'rank.deductor' },
+  { minLevel: 10, titleKey: 'rank.logicExplorer' },
+  { minLevel: 14, titleKey: 'rank.codebreaker' },
+  { minLevel: 18, titleKey: 'rank.analyst' },
+  { minLevel: 22, titleKey: 'rank.strategist' },
+  { minLevel: 26, titleKey: 'rank.cipherAdept' },
+  { minLevel: 30, titleKey: 'rank.mindArchitect' },
+  { minLevel: 35, titleKey: 'rank.grandmaster' },
+  { minLevel: 40, titleKey: 'rank.cognitiveElite' },
+  { minLevel: 45, titleKey: 'rank.oracle' },
+  { minLevel: 50, titleKey: 'rank.mindMaster' },
 ];
 
-export function levelTitle(level: number): string {
-  let title = LEVEL_TITLES[0]?.title ?? 'Beginner';
+export function levelTitleKey(level: number): TranslationKey {
+  let titleKey: TranslationKey = LEVEL_TITLES[0]?.titleKey ?? 'rank.beginner';
   for (const entry of LEVEL_TITLES) {
-    if (level >= entry.minLevel) title = entry.title;
+    if (level >= entry.minLevel) titleKey = entry.titleKey;
     else break;
   }
-  return title;
+  return titleKey;
 }
 
 /** The next rank a player is working toward — shown on the profile screen. */
-export function nextTitleMilestone(level: number): { minLevel: number; title: string } | null {
+export function nextTitleMilestone(level: number): LevelTitle | null {
   return LEVEL_TITLES.find((entry) => entry.minLevel > level) ?? null;
 }

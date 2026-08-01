@@ -131,7 +131,7 @@ export const submitGameResult = onCall(
         countryCode: nextProfile.countryCode ?? null,
         level: nextProfile.level,
         xp: nextProfile.xp,
-        title: level.title,
+        titleKey: level.titleKey,
         currentStreak: nextProfile.streak.current,
         badgeCount: Object.keys(nextProfile.badges).length,
         updatedAt: now,

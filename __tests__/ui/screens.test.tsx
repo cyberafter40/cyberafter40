@@ -5,6 +5,7 @@ import { ProfileScreen } from '@/screens/ProfileScreen';
 import { ResultScreen } from '@/screens/ResultScreen';
 import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { BadgesScreen } from '@/screens/BadgesScreen';
+import { SettingsScreen } from '@/screens/SettingsScreen';
 import { fetchDailyChallenge, fetchDailyEntry } from '@/services/firestore/daily';
 import { fetchLeaderboard } from '@/services/firestore/leaderboard';
 import { toDateKey } from '@/utils/date';
@@ -195,7 +196,7 @@ describe('HomeScreen', () => {
 
 /* ---------------- Result ---------------- */
 
-function renderResult(overrides: Record<string, unknown> = {}) {
+function renderResult(overrides: Record<string, unknown> = {}, locale: 'en' | 'tr' = 'en') {
   const params = {
     moduleId: 'number-logic',
     variantId: 'two-digit',
@@ -212,8 +213,16 @@ function renderResult(overrides: Record<string, unknown> = {}) {
       rating: 'solid',
       isPersonalBest: false,
       components: [
-        { id: 'base', label: 'Solved', kind: 'add', value: 120, points: 120, detail: '1★ difficulty' },
-        { id: 'daily', label: 'Daily Challenge', kind: 'multiply', value: 1.5, points: 103 },
+        {
+          id: 'base',
+          labelKey: 'scoring.base',
+          kind: 'add',
+          value: 120,
+          points: 120,
+          detailKey: 'scoring.baseDetail',
+          detailParams: { difficulty: 1 },
+        },
+        { id: 'daily', labelKey: 'scoring.daily', kind: 'multiply', value: 1.5, points: 103 },
       ],
     },
     events: [],
@@ -226,6 +235,7 @@ function renderResult(overrides: Record<string, unknown> = {}) {
       navigation={navigation as never}
       route={{ key: 'Result', name: 'Result', params } as never}
     />,
+    { locale },
   );
 }
 
@@ -263,7 +273,7 @@ describe('ResultScreen', () => {
 
   it('celebrates a level-up when one happened', () => {
     renderResult({
-      events: [{ type: 'level_up', from: 9, to: 10, title: 'Logic Explorer' }],
+      events: [{ type: 'level_up', from: 9, to: 10, titleKey: 'rank.logicExplorer' }],
     });
     expect(screen.getByText('Level 10 — Logic Explorer')).toBeTruthy();
   });
@@ -382,5 +392,125 @@ describe('BadgesScreen', () => {
     renderWithProviders(<BadgesScreen />);
 
     expect(screen.getByLabelText(/First Light, unlocked/)).toBeTruthy();
+  });
+});
+
+/* ---------------- Settings ---------------- */
+
+describe('SettingsScreen', () => {
+  it('offers device-match plus every shipped locale, in its own script', () => {
+    renderWithProviders(
+      <SettingsScreen navigation={navigation as never} route={{} as never} />,
+    );
+
+    // Names are deliberately NOT translated — a player looking for their own
+    // language scans for "Türkçe", not for whatever English calls it.
+    expect(screen.getByRole('radio', { name: 'Match device' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'English' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Türkçe' })).toBeTruthy();
+  });
+
+  it('marks the active language and persists a change to the profile', () => {
+    mockProfileValue.updateSettings.mockClear();
+    renderWithProviders(
+      <SettingsScreen navigation={navigation as never} route={{} as never} />,
+    );
+
+    expect(screen.getByRole('radio', { name: 'Match device' })).toBeSelected();
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Türkçe' }));
+
+    // Written to the profile, not to component state — the choice has to follow
+    // the account to a new device.
+    expect(mockProfileValue.updateSettings).toHaveBeenCalledWith({ locale: 'tr' });
+  });
+});
+
+/* ---------------- Localization ---------------- */
+
+/**
+ * These are the tests the catalogue tests cannot write.
+ *
+ * `__tests__/i18n.test.ts` proves the Turkish catalogue is complete and
+ * consistent; it says nothing about whether a screen actually *reads* from it.
+ * A component that interpolates its own English — or that renders a key it
+ * forgot to translate — passes every catalogue test and still ships an English
+ * word to a Turkish player. So these render real screens in Turkish and assert
+ * on what a Turkish speaker would see.
+ */
+describe('rendering in Turkish', () => {
+  it('translates the home screen, including registry-supplied game names', async () => {
+    primeDaily(null);
+    renderWithProviders(<HomeScreen navigation={navigation as never} route={{} as never} />, {
+      locale: 'tr',
+    });
+
+    await waitFor(() => expect(screen.getByText('Günün Meydan Okuması')).toBeTruthy());
+
+    // Module and variant names come from the module registry, which is the
+    // layer most likely to be forgotten — it is data, not JSX.
+    expect(screen.getByText(/Sayı Mantığı/)).toBeTruthy();
+    expect(screen.getByText(/Hafıza Izgarası/)).toBeTruthy();
+    expect(screen.getAllByText('İki Rakam').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Hafıza Izgarası oyna, Dört Kare' })).toBeTruthy();
+
+    // Nothing English survives in the section headings.
+    expect(screen.queryByText('Daily Challenge')).toBeNull();
+    expect(screen.queryByText(/Number Logic/)).toBeNull();
+  });
+
+  it('translates badge names and their accessibility labels', () => {
+    mockProfileValue.profile = makeProfile({
+      badges: { first_light: { id: 'first_light', unlockedAt: 1_700_000_000_000 } },
+    });
+    renderWithProviders(<BadgesScreen />, { locale: 'tr' });
+
+    expect(screen.getByText('İlk Işık')).toBeTruthy();
+    expect(screen.getByLabelText(/İlk Işık, açıldı/)).toBeTruthy();
+    expect(screen.getAllByLabelText('Gizli rozet, henüz açılmadı')).toHaveLength(3);
+  });
+
+  it('translates the rank a level maps to, not just the level number', async () => {
+    mockProfileValue.profile = makeProfile({ xp: 20_000 });
+    renderWithProviders(<ProfileScreen navigation={navigation as never} route={{} as never} />, {
+      locale: 'tr',
+    });
+
+    // 20 000 XP is level 43, which maps to the "Cognitive Elite" rank. The rank
+    // comes from LEVEL_TITLES, another data table that would happily have kept
+    // its English.
+    await waitFor(() => expect(screen.getByText('Bilişsel Seçkin')).toBeTruthy());
+    expect(screen.getByText('İstatistikler')).toBeTruthy();
+    expect(screen.getByText('Oynanan oyun')).toBeTruthy();
+  });
+
+  it('translates the result screen’s score breakdown, which the backend supplies', () => {
+    renderResult({
+      score: {
+        total: 310,
+        xp: 155,
+        rating: 'excellent',
+        isPersonalBest: false,
+        components: [
+          {
+            id: 'base',
+            labelKey: 'scoring.base',
+            kind: 'add',
+            value: 120,
+            points: 120,
+            detailKey: 'scoring.baseDetail',
+            detailParams: { difficulty: 1 },
+          },
+          { id: 'daily', labelKey: 'scoring.daily', kind: 'multiply', value: 1.5, points: 103 },
+        ],
+      },
+    }, 'tr');
+
+    // The scoring engine runs inside the Cloud Function; if it emitted prose
+    // instead of keys these would read English no matter what the player chose.
+    expect(screen.getByText('Mükemmel')).toBeTruthy();
+    expect(screen.getByText('Çözüldü')).toBeTruthy();
+    expect(screen.getByText('1★ zorluk')).toBeTruthy();
+    expect(screen.getByText('Günün Meydan Okuması')).toBeTruthy();
   });
 });

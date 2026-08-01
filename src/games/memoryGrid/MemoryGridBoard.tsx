@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Pressable, View, useWindowDimensions } from 'react-native';
 import type { GameRendererProps } from '@/games/renderers';
 import { ProgressBar, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { errorFeedback, successFeedback, tapFeedback } from '@/ui/haptics';
 import { useTheme } from '@/ui/ThemeProvider';
 import type { MemoryGridFeedback, MemoryGridState } from './engine';
@@ -18,6 +19,7 @@ type Phase = 'watch' | 'recall' | 'done';
  */
 export function MemoryGridBoard({ session, onFinished }: GameRendererProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
 
   const state = session.state<MemoryGridState>();
@@ -86,14 +88,20 @@ export function MemoryGridBoard({ session, onFinished }: GameRendererProps) {
     <View style={{ flex: 1, justifyContent: 'center' }}>
       <View style={{ alignItems: 'center', marginBottom: theme.spacing.xl }}>
         <Text variant="heading" center>
-          {phase === 'watch' ? 'Watch' : phase === 'recall' ? 'Repeat it' : 'Done'}
+          {phase === 'watch'
+            ? t('memoryGrid.watch')
+            : phase === 'recall'
+              ? t('memoryGrid.recall')
+              : t('memoryGrid.done')}
         </Text>
         <Text variant="caption" tone="muted" center style={{ marginTop: theme.spacing.xs }}>
           {phase === 'watch'
-            ? `${config.sequenceLength} tiles, in order`
-            : `${recalled} of ${config.sequenceLength} · ${mistakesLeft} mistake${
-                mistakesLeft === 1 ? '' : 's'
-              } left`}
+            ? t('memoryGrid.watchHint', { count: config.sequenceLength })
+            : t('memoryGrid.progress', {
+                count: mistakesLeft,
+                recalled,
+                total: config.sequenceLength,
+              })}
         </Text>
 
         <ProgressBar
@@ -129,7 +137,7 @@ export function MemoryGridBoard({ session, onFinished }: GameRendererProps) {
                 <Pressable
                   key={tile}
                   accessibilityRole="button"
-                  accessibilityLabel={`Tile ${tile + 1}`}
+                  accessibilityLabel={t('memoryGrid.tile', { number: tile + 1 })}
                   accessibilityState={{ disabled: phase !== 'recall' }}
                   disabled={phase !== 'recall'}
                   onPress={() => tap(tile)}
@@ -156,7 +164,11 @@ export function MemoryGridBoard({ session, onFinished }: GameRendererProps) {
         center
         style={{ marginTop: theme.spacing.xl, height: 20 }}
       >
-        {phase === 'watch' ? '' : session.errorMessage ?? 'Tap the tiles in the order they lit up.'}
+        {phase === 'watch'
+          ? ''
+          : session.error
+            ? t(session.error.key, session.error.params)
+            : t('memoryGrid.recallHint')}
       </Text>
     </View>
   );

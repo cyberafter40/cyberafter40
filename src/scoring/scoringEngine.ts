@@ -1,3 +1,4 @@
+import type { TranslationKey } from '@/i18n/types';
 import type {
   ScoreBreakdown,
   ScoreComponent,
@@ -69,10 +70,17 @@ export function rateOutcome(ctx: ScoringContext): ScoreRating {
   return 'scraped';
 }
 
-export const RATING_COPY: Record<ScoreRating, { title: string; subtitle: string }> = {
-  flawless: { title: 'Flawless', subtitle: 'Straight to the answer.' },
-  excellent: { title: 'Excellent', subtitle: 'Sharp deduction — barely a wasted move.' },
-  solid: { title: 'Solid', subtitle: 'Clean logic, steady pace.' },
-  scraped: { title: 'Got there', subtitle: 'Close call. Tomorrow will feel easier.' },
-  failed: { title: 'Not this time', subtitle: 'The pattern is clearer than it looks.' },
+/**
+ * Translation keys for each rating. Keys, not prose — this module is compiled
+ * into the Cloud Functions, which must not embed a language.
+ */
+export const RATING_KEYS: Record<
+  ScoreRating,
+  { title: TranslationKey; subtitle: TranslationKey }
+> = {
+  flawless: { title: 'rating.flawlessTitle', subtitle: 'rating.flawlessBody' },
+  excellent: { title: 'rating.excellentTitle', subtitle: 'rating.excellentBody' },
+  solid: { title: 'rating.solidTitle', subtitle: 'rating.solidBody' },
+  scraped: { title: 'rating.scrapedTitle', subtitle: 'rating.scrapedBody' },
+  failed: { title: 'rating.failedTitle', subtitle: 'rating.failedBody' },
 };

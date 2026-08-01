@@ -93,6 +93,7 @@ describe('Keypad', () => {
       onSubmit: jest.fn(),
       canSubmit: true,
       canDelete: true,
+      submitLabel: 'Check',
       ...overrides,
     };
     renderWithProviders(<Keypad {...props} />);

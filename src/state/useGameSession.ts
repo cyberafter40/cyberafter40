@@ -6,6 +6,7 @@ import {
   type SubmitOutcome,
 } from '@/engine/session';
 import type { GameMode, GameStatus } from '@/engine/types';
+import type { TranslationKey, TranslationParams } from '@/i18n/types';
 import { track } from '@/services/analytics';
 import { submitResult, type SubmissionOutcome } from '@/services/submission';
 import { useProfile } from './ProfileContext';
@@ -24,7 +25,12 @@ export interface UseGameSessionValue {
   history: readonly MoveRecord[];
   /** Increments whenever a move is rejected — drives the shake animation. */
   shakeToken: number;
-  errorMessage: string | null;
+  /**
+   * Why the last move was rejected, as a translation key plus its parameters.
+   * A key rather than a sentence: the engine that produced it is pure and is
+   * replayed on the server, so it cannot know the player's language.
+   */
+  error: MoveError | null;
   isOver: boolean;
   state: <T>() => T;
   /**
@@ -55,6 +61,11 @@ export interface UseGameSessionValue {
  * version counter to trigger re-renders. That keeps the engine free of React
  * concerns and means any future game module gets this plumbing for free.
  */
+export interface MoveError {
+  key: TranslationKey;
+  params?: TranslationParams;
+}
+
 export function useGameSession(input: UseGameSessionInput): UseGameSessionValue {
   const { profile, applyLocalProfile } = useProfile();
 
@@ -80,7 +91,7 @@ export function useGameSession(input: UseGameSessionInput): UseGameSessionValue 
   const session = sessionRef.current;
   const [version, setVersion] = useState(0);
   const [shakeToken, setShakeToken] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [error, setError] = useState<MoveError | null>(null);
   const submittedRef = useRef(false);
 
   const submitMove = useCallback(
@@ -89,11 +100,16 @@ export function useGameSession(input: UseGameSessionInput): UseGameSessionValue 
 
       if (!outcome.accepted) {
         setShakeToken((token) => token + 1);
-        setErrorMessage(outcome.validation.message ?? 'That move is not allowed.');
+        setError({
+          key: outcome.validation.messageKey ?? 'numberLogic.errorRejected',
+          ...(outcome.validation.messageParams
+            ? { params: outcome.validation.messageParams }
+            : {}),
+        });
         return outcome;
       }
 
-      setErrorMessage(null);
+      setError(null);
       setVersion((v) => v + 1);
 
       track('guess_submitted', {
@@ -134,7 +150,7 @@ export function useGameSession(input: UseGameSessionInput): UseGameSessionValue 
       status: session.status,
       history: session.history,
       shakeToken,
-      errorMessage,
+      error,
       isOver: session.isOver,
       state: <T,>() => session.getState<T>(),
       submitMove,
@@ -144,6 +160,6 @@ export function useGameSession(input: UseGameSessionInput): UseGameSessionValue 
     }),
     // `version` is the explicit invalidation signal for the mutable session.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session, version, shakeToken, errorMessage, submitMove, abandon, finish],
+    [session, version, shakeToken, error, submitMove, abandon, finish],
   );
 }

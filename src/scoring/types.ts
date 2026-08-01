@@ -1,4 +1,5 @@
 import type { GameResult } from '@/engine/session';
+import type { TranslationKey } from '@/i18n/types';
 
 /**
  * Scoring is deliberately separated from game rules.
@@ -32,19 +33,33 @@ export type ScoreComponentKind = 'add' | 'multiply';
 
 export interface ScoreComponent {
   id: string;
-  label: string;
+  /**
+   * Translation key for the component's name.
+   *
+   * Rules emit keys rather than prose because this layer is compiled into the
+   * Cloud Functions too — a backend has no business deciding what language a
+   * player reads, and a score breakdown persisted as English would be wrong for
+   * everyone else the moment a second locale ships.
+   */
+  labelKey: TranslationKey;
   kind: ScoreComponentKind;
   /** Points added, or the factor multiplied by. */
   value: number;
   /** Signed effect on the running total, filled in by the engine. */
   points: number;
   /** Optional one-line explanation shown on the result screen. */
-  detail?: string;
+  detailKey?: TranslationKey;
+  detailParams?: Record<string, string | number>;
 }
 
 export interface ScoringRule {
   id: string;
-  label: string;
+  /**
+   * Developer-facing name, for debugging and for reading a profile definition.
+   * Never rendered — what the player sees is the `labelKey` on the component
+   * the rule emits.
+   */
+  name: string;
   /** Skip the rule entirely when this returns false. */
   applies(ctx: ScoringContext): boolean;
   /**

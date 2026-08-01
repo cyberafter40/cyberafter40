@@ -17,6 +17,7 @@ import { LeaderboardScreen } from '@/screens/LeaderboardScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { ResultScreen } from '@/screens/ResultScreen';
 import { SettingsScreen } from '@/screens/SettingsScreen';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { Text } from '@/ui/components';
 import { useTheme } from '@/ui/ThemeProvider';
 import type { RootStackParamList, TabParamList } from './types';
@@ -32,6 +33,7 @@ const TAB_ICONS: Record<keyof TabParamList, string> = {
 
 function TabsNavigator() {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Tabs.Navigator
@@ -53,9 +55,13 @@ function TabsNavigator() {
         ),
       })}
     >
-      <Tabs.Screen name="Home" component={HomeScreen} options={{ title: 'Play' }} />
-      <Tabs.Screen name="Leaderboard" component={LeaderboardScreen} options={{ title: 'Ranks' }} />
-      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'You' }} />
+      <Tabs.Screen name="Home" component={HomeScreen} options={{ title: t('nav.play') }} />
+      <Tabs.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{ title: t('nav.ranks') }}
+      />
+      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: t('nav.you') }} />
     </Tabs.Navigator>
   );
 }
@@ -69,6 +75,7 @@ function TabsNavigator() {
  */
 export function RootNavigator() {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const navTheme: NavTheme = {
     ...(theme.scheme === 'dark' ? DarkTheme : DefaultTheme),
@@ -109,12 +116,12 @@ export function RootNavigator() {
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{ headerShown: true, title: 'Settings' }}
+          options={{ headerShown: true, title: t('settings.title') }}
         />
         <Stack.Screen
           name="Badges"
           component={BadgesScreen}
-          options={{ headerShown: true, title: 'Badges' }}
+          options={{ headerShown: true, title: t('badges.title') }}
         />
         <Stack.Screen
           name="HowToPlay"

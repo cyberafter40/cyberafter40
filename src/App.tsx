@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, AppState, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registerAllGameModules } from '@/games';
+import { LocaleProvider } from '@/i18n/LocaleProvider';
 import { OnboardingScreen } from '@/screens/OnboardingScreen';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import {
@@ -43,10 +44,18 @@ function Splash() {
   );
 }
 
-/** Reads the theme preference out of the profile once it is available. */
+/**
+ * Reads the theme and language preferences out of the profile once it is
+ * available. Both default to `system` until then, so the first frame already
+ * matches the device rather than flashing English on a Turkish phone.
+ */
 function ThemedApp({ children }: { children: React.ReactNode }) {
   const { profile } = useProfile();
-  return <ThemeProvider preference={profile?.settings.theme ?? 'system'}>{children}</ThemeProvider>;
+  return (
+    <LocaleProvider preference={profile?.settings.locale ?? 'system'}>
+      <ThemeProvider preference={profile?.settings.theme ?? 'system'}>{children}</ThemeProvider>
+    </LocaleProvider>
+  );
 }
 
 function Shell() {

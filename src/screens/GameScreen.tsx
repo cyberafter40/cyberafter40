@@ -4,6 +4,7 @@ import { getGameModule, getVariant } from '@/engine/registry';
 import { getRenderer } from '@/games/renderers';
 import { useGameSession } from '@/state/useGameSession';
 import { Screen, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 import type { RootScreenProps } from '@/navigation/types';
 
@@ -18,6 +19,7 @@ type Props = RootScreenProps<'Game'>;
  */
 export function GameScreen({ route, navigation }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const params = route.params;
 
   const module = getGameModule(params.moduleId);
@@ -81,14 +83,12 @@ export function GameScreen({ route, navigation }: Props) {
     }
 
     Alert.alert(
-      'Leave this game?',
-      params.mode === 'daily'
-        ? 'Your one attempt at today’s challenge will be recorded as unfinished.'
-        : 'This game will be recorded as unfinished.',
+      t('game.leaveTitle'),
+      params.mode === 'daily' ? t('game.leaveDaily') : t('game.leaveClassic'),
       [
-        { text: 'Keep playing', style: 'cancel' },
+        { text: t('game.keepPlaying'), style: 'cancel' },
         {
-          text: 'Leave',
+          text: t('game.leaveConfirm'),
           style: 'destructive',
           onPress: () => {
             session.abandon();
@@ -97,14 +97,14 @@ export function GameScreen({ route, navigation }: Props) {
         },
       ],
     );
-  }, [session, navigation, params.mode, goToResult]);
+  }, [session, navigation, params.mode, goToResult, t]);
 
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.sm }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Leave game"
+          accessibilityLabel={t('game.leave')}
           onPress={confirmQuit}
           hitSlop={12}
         >
@@ -115,10 +115,10 @@ export function GameScreen({ route, navigation }: Props) {
 
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text variant="overline" tone="faint">
-            {params.mode === 'daily' ? 'Daily Challenge' : module.title}
+            {params.mode === 'daily' ? t('home.dailyChallenge') : t(module.titleKey)}
           </Text>
           <Text variant="caption" tone="muted">
-            {variant.title}
+            {t(variant.titleKey)}
           </Text>
         </View>
 
@@ -142,7 +142,7 @@ export function GameScreen({ route, navigation }: Props) {
           }}
         >
           <Text variant="body" tone="inverse">
-            Scoring…
+            {t('game.scoring')}
           </Text>
         </View>
       ) : null}

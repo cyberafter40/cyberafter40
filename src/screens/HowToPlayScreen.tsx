@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { getVariant } from '@/engine/registry';
 import { getFeedbackPolicy } from '@/games/numberLogic/policies';
 import { Card, GuessRow, Screen, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 import type { RootScreenProps } from '@/navigation/types';
 
@@ -17,70 +18,61 @@ type Props = RootScreenProps<'HowToPlay'>;
  */
 export function HowToPlayScreen({ route }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const variantId = route.params?.variantId ?? 'two-digit';
   const variant = getVariant('number-logic', variantId);
   const policy = getFeedbackPolicy(variant.config.policyId);
 
   return (
     <Screen scroll>
-      <Text variant="title">How to play</Text>
+      <Text variant="title">{t('howToPlay.title')}</Text>
       <Text variant="body" tone="muted" style={{ marginTop: theme.spacing.sm }}>
-        A code is hidden. Guess it. Every guess comes back as a single number
-        that tells you how close you were.
+        {t('howToPlay.intro')}
       </Text>
 
       <Card style={{ marginTop: theme.spacing.xl }}>
         <Text variant="overline" tone="faint">
-          Scoring — {policy.label}
+          {t('howToPlay.scoringTitle', { policy: t(policy.labelKey) })}
         </Text>
-        <Rule
-          symbol="+1"
-          tone="positive"
-          text={policy.legend.exact}
-        />
-        <Rule symbol="−1" tone="negative" text={policy.legend.misplaced} />
-        <Rule symbol="0" tone="muted" text={policy.legend.absent} />
+        <Rule symbol="+1" tone="positive" text={t(policy.legend.exact)} />
+        <Rule symbol="−1" tone="negative" text={t(policy.legend.misplaced)} />
+        <Rule symbol="0" tone="muted" text={t(policy.legend.absent)} />
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.lg }}>
-          The number you see is the total. That total can be ambiguous — and
-          working out which combination produced it is the game.
+          {t('howToPlay.ambiguity')}
         </Text>
       </Card>
 
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        Example — the code is 82
+        {t('howToPlay.exampleTitle')}
       </Text>
       <View style={{ marginTop: theme.spacing.md }}>
         <GuessRow index={0} guess="56" display="0" score={0} />
         <Text variant="caption" tone="faint" style={{ marginBottom: theme.spacing.lg }}>
-          Neither digit appears in the code.
+          {t('howToPlay.example1')}
         </Text>
 
         <GuessRow index={1} guess="28" display="−2" score={-2} />
         <Text variant="caption" tone="faint" style={{ marginBottom: theme.spacing.lg }}>
-          Both digits are correct, but both are in the wrong place.
+          {t('howToPlay.example2')}
         </Text>
 
         <GuessRow index={2} guess="82" display="+2" score={2} />
         <Text variant="caption" tone="faint">
-          Both digits correct, both in the right place. Solved.
+          {t('howToPlay.example3')}
         </Text>
       </View>
 
       <Card style={{ marginTop: theme.spacing.xxl }}>
-        <Text variant="bodyStrong">The Daily Challenge</Text>
+        <Text variant="bodyStrong">{t('howToPlay.dailyTitle')}</Text>
         <Text variant="body" tone="muted" style={{ marginTop: theme.spacing.sm }}>
-          One code a day, the same for every player in the world, one attempt.
-          It resets at midnight UTC. Play any day to keep your streak alive —
-          solving is worth more, but showing up is what counts.
+          {t('howToPlay.dailyBody')}
         </Text>
       </Card>
 
       <Card style={{ marginTop: theme.spacing.lg }}>
-        <Text variant="bodyStrong">A tip</Text>
+        <Text variant="bodyStrong">{t('howToPlay.tipTitle')}</Text>
         <Text variant="body" tone="muted" style={{ marginTop: theme.spacing.sm }}>
-          A guess that rules out possibilities is worth more than a guess that
-          might be lucky. The counter beside each row shows how many codes are
-          still consistent with everything you know.
+          {t('howToPlay.tipBody')}
         </Text>
       </Card>
     </Screen>

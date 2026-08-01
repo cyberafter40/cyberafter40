@@ -12,6 +12,8 @@
  * all without touching the engine.
  */
 
+import type { TranslationKey } from '@/i18n/types';
+
 export interface DigitMatchCounts {
   /** Right digit, right position. */
   exact: number;
@@ -23,13 +25,14 @@ export interface DigitMatchCounts {
 
 export interface FeedbackPolicy {
   id: string;
-  label: string;
-  description: string;
+  /** Translation key for the policy's display name. */
+  labelKey: TranslationKey;
+  descriptionKey: TranslationKey;
   weights: { exact: number; misplaced: number; absent: number };
   /** Renders the numeric score for the UI, e.g. `+2`, `0`, `−2`. */
   format(score: number): string;
-  /** Legend copy for the How to Play sheet. */
-  legend: { exact: string; misplaced: string; absent: string };
+  /** Legend keys for the How to Play sheet. */
+  legend: { exact: TranslationKey; misplaced: TranslationKey; absent: TranslationKey };
   /** Score that means "solved" for a code of `digits` length. */
   winningScore(digits: number): number;
 }
@@ -43,14 +46,14 @@ function signed(score: number): string {
 /** The MindCode default: +1 / −1 / 0. */
 export const plusMinusPolicy: FeedbackPolicy = {
   id: 'plus-minus',
-  label: 'Plus / Minus',
-  description: 'Right place +1, right digit wrong place −1, wrong digit 0.',
+  labelKey: 'policy.plusMinus',
+  descriptionKey: 'policy.plusMinusBody',
   weights: { exact: 1, misplaced: -1, absent: 0 },
   format: signed,
   legend: {
-    exact: 'Correct digit, correct position',
-    misplaced: 'Correct digit, wrong position',
-    absent: 'Digit is not in the code',
+    exact: 'policy.legendExact',
+    misplaced: 'policy.legendMisplaced',
+    absent: 'policy.legendAbsent',
   },
   winningScore: (digits) => digits,
 };
@@ -58,14 +61,14 @@ export const plusMinusPolicy: FeedbackPolicy = {
 /** Everything positive — a gentler onboarding variant. */
 export const positiveOnlyPolicy: FeedbackPolicy = {
   id: 'positive',
-  label: 'Positive',
-  description: 'Right place +2, right digit wrong place +1, wrong digit 0.',
+  labelKey: 'policy.positive',
+  descriptionKey: 'policy.positiveBody',
   weights: { exact: 2, misplaced: 1, absent: 0 },
   format: (score) => `${score}`,
   legend: {
-    exact: 'Correct digit, correct position',
-    misplaced: 'Correct digit, wrong position',
-    absent: 'Digit is not in the code',
+    exact: 'policy.legendExact',
+    misplaced: 'policy.legendMisplaced',
+    absent: 'policy.legendAbsent',
   },
   winningScore: (digits) => digits * 2,
 };
@@ -73,14 +76,14 @@ export const positiveOnlyPolicy: FeedbackPolicy = {
 /** Position-only feedback — considerably harder; reserved for expert modes. */
 export const strictPolicy: FeedbackPolicy = {
   id: 'strict',
-  label: 'Strict',
-  description: 'Only exact positions count. Misplaced digits tell you nothing.',
+  labelKey: 'policy.strict',
+  descriptionKey: 'policy.strictBody',
   weights: { exact: 1, misplaced: 0, absent: 0 },
   format: signed,
   legend: {
-    exact: 'Correct digit, correct position',
-    misplaced: 'No information given',
-    absent: 'No information given',
+    exact: 'policy.legendExact',
+    misplaced: 'policy.legendNone',
+    absent: 'policy.legendNone',
   },
   winningScore: (digits) => digits,
 };

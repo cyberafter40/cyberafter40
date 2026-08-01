@@ -101,9 +101,9 @@ describe('computeScore', () => {
   it('never returns a negative total', () => {
     const punishing: ScoringRule = {
       id: 'penalty',
-      label: 'Penalty',
+      name: 'Penalty',
       applies: () => true,
-      evaluate: () => ({ id: 'penalty', label: 'Penalty', kind: 'add', value: -10_000 }),
+      evaluate: () => ({ id: 'penalty', labelKey: 'scoring.base', kind: 'add', value: -10_000 }),
     };
     const score = computeScore(
       { ...standardScoringProfile, rules: [punishing] },
@@ -122,15 +122,15 @@ describe('computeScore', () => {
   it('runs multiplicative rules against the accumulated total, in order', () => {
     const add: ScoringRule = {
       id: 'a',
-      label: 'A',
+      name: 'A',
       applies: () => true,
-      evaluate: () => ({ id: 'a', label: 'A', kind: 'add', value: 100 }),
+      evaluate: () => ({ id: 'a', labelKey: 'scoring.base', kind: 'add', value: 100 }),
     };
     const double: ScoringRule = {
       id: 'b',
-      label: 'B',
+      name: 'B',
       applies: () => true,
-      evaluate: () => ({ id: 'b', label: 'B', kind: 'multiply', value: 2 }),
+      evaluate: () => ({ id: 'b', labelKey: 'scoring.streak', kind: 'multiply', value: 2 }),
     };
 
     const score = computeScore(

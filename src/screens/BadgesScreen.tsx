@@ -3,10 +3,12 @@ import { View } from 'react-native';
 import { BADGES } from '@/progress/badges';
 import { useProfile } from '@/state/ProfileContext';
 import { BadgeTile, Screen, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 
 export function BadgesScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { profile } = useProfile();
   const owned = profile?.badges ?? {};
   const unlockedCount = Object.keys(owned).length;
@@ -21,9 +23,9 @@ export function BadgesScreen() {
 
   return (
     <Screen scroll>
-      <Text variant="title">Badges</Text>
+      <Text variant="title">{t('badges.title')}</Text>
       <Text variant="caption" tone="muted" style={{ marginTop: theme.spacing.xs }}>
-        {unlockedCount} of {BADGES.length} unlocked
+        {t('badges.unlockedCount', { unlocked: unlockedCount, total: BADGES.length })}
       </Text>
 
       <View

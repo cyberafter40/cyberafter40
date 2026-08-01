@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { BadgeDefinition, BadgeTier } from '@/progress/badges';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '../ThemeProvider';
 import { Text } from './Text';
 
@@ -19,6 +20,7 @@ const TIER_COLORS: Record<BadgeTier, string> = {
 
 export function BadgeTile({ badge, unlocked, unlockedAt }: BadgeTileProps) {
   const theme = useTheme();
+  const { t, locale } = useTranslation();
   const hidden = badge.secret && !unlocked;
 
   return (
@@ -26,11 +28,12 @@ export function BadgeTile({ badge, unlocked, unlockedAt }: BadgeTileProps) {
       accessible
       accessibilityRole="summary"
       accessibilityLabel={
-        unlocked
-          ? `${badge.title}, unlocked. ${badge.description}`
-          : hidden
-            ? 'Hidden badge, not yet unlocked'
-            : `${badge.title}, locked. ${badge.description}`
+        hidden
+          ? t('a11y.badgeHidden')
+          : t(unlocked ? 'a11y.badgeUnlocked' : 'a11y.badgeLocked', {
+              title: t(badge.titleKey),
+              description: t(badge.descriptionKey),
+            })
       }
       style={[
         styles.tile,
@@ -45,14 +48,14 @@ export function BadgeTile({ badge, unlocked, unlockedAt }: BadgeTileProps) {
     >
       <Text style={{ fontSize: 30 }}>{hidden ? '❔' : badge.icon}</Text>
       <Text variant="caption" style={{ marginTop: theme.spacing.sm }} numberOfLines={1}>
-        {hidden ? 'Hidden' : badge.title}
+        {hidden ? t('badges.hidden') : t(badge.titleKey)}
       </Text>
       <Text variant="caption" tone="faint" numberOfLines={2} style={{ marginTop: 2 }}>
-        {hidden ? 'Keep playing to reveal' : badge.description}
+        {hidden ? t('badges.hiddenBody') : t(badge.descriptionKey)}
       </Text>
       {unlocked && unlockedAt ? (
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.xs }}>
-          {new Date(unlockedAt).toLocaleDateString()}
+          {new Date(unlockedAt).toLocaleDateString(locale)}
         </Text>
       ) : null}
     </View>

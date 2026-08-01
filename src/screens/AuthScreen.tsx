@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, TextInput, View } from 'react-native';
 import { describeAuthError } from '@/services/auth';
+import { useTranslation } from '@/i18n/LocaleProvider';
+import type { TranslationKey, TranslationParams } from '@/i18n/types';
 import { useAuth } from '@/state/AuthContext';
 import { Button, Screen, Text } from '@/ui/components';
 import { useTheme } from '@/ui/ThemeProvider';
@@ -8,6 +10,11 @@ import { generateDisplayName, validateDisplayName } from '@/utils/names';
 import type { RootScreenProps } from '@/navigation/types';
 
 type Props = RootScreenProps<'Auth'>;
+
+interface Message {
+  key: TranslationKey;
+  params?: TranslationParams;
+}
 
 /**
  * Sign in / create account.
@@ -18,6 +25,7 @@ type Props = RootScreenProps<'Auth'>;
  */
 export function AuthScreen({ route, navigation }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { user, signUp, signIn, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<'sign_in' | 'sign_up'>(route.params?.intent ?? 'sign_up');
@@ -27,8 +35,10 @@ export function AuthScreen({ route, navigation }: Props) {
     generateDisplayName(user?.uid ?? 'guest'),
   );
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // Keys, not sentences: the auth service and the name validator both report a
+  // translation key, and the screen is the only layer that knows the language.
+  const [error, setError] = useState<Message | null>(null);
+  const [notice, setNotice] = useState<TranslationKey | null>(null);
 
   const isSignUp = mode === 'sign_up';
 
@@ -39,7 +49,7 @@ export function AuthScreen({ route, navigation }: Props) {
     if (isSignUp) {
       const nameError = validateDisplayName(displayName);
       if (nameError) {
-        setError(nameError);
+        setError(nameError.params ? { key: nameError.key, params: nameError.params } : { key: nameError.key });
         return;
       }
     }
@@ -50,7 +60,7 @@ export function AuthScreen({ route, navigation }: Props) {
       else await signIn(email.trim(), password);
       navigation.goBack();
     } catch (err) {
-      setError(describeAuthError(err));
+      setError({ key: describeAuthError(err) });
     } finally {
       setBusy(false);
     }
@@ -72,34 +82,32 @@ export function AuthScreen({ route, navigation }: Props) {
     <Screen scroll>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Text variant="title" style={{ marginTop: theme.spacing.xl }}>
-          {isSignUp ? 'Keep your progress' : 'Welcome back'}
+          {isSignUp ? t('auth.signUpTitle') : t('auth.signInTitle')}
         </Text>
         <Text variant="body" tone="muted" style={{ marginTop: theme.spacing.sm }}>
-          {isSignUp
-            ? 'Your streak, XP and badges stay on this device unless you create an account. Everything you have already earned carries over.'
-            : 'Sign in to restore your streak, XP and badges.'}
+          {isSignUp ? t('auth.signUpBody') : t('auth.signInBody')}
         </Text>
 
         {isSignUp ? (
           <>
             <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xl }}>
-              Display name
+              {t('auth.displayName')}
             </Text>
             <TextInput
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder="Shown on leaderboards"
+              placeholder={t('auth.displayNamePlaceholder')}
               placeholderTextColor={theme.colors.textFaint}
               autoCapitalize="words"
               maxLength={20}
               style={inputStyle}
-              accessibilityLabel="Display name"
+              accessibilityLabel={t('auth.displayName')}
             />
           </>
         ) : null}
 
         <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xl }}>
-          Email
+          {t('auth.email')}
         </Text>
         <TextInput
           value={email}
@@ -111,37 +119,37 @@ export function AuthScreen({ route, navigation }: Props) {
           keyboardType="email-address"
           textContentType="emailAddress"
           style={inputStyle}
-          accessibilityLabel="Email"
+          accessibilityLabel={t('auth.email')}
         />
 
         <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xl }}>
-          Password
+          {t('auth.password')}
         </Text>
         <TextInput
           value={password}
           onChangeText={setPassword}
-          placeholder="At least 6 characters"
+          placeholder={t('auth.passwordPlaceholder')}
           placeholderTextColor={theme.colors.textFaint}
           secureTextEntry
           autoCapitalize="none"
           textContentType={isSignUp ? 'newPassword' : 'password'}
           style={inputStyle}
-          accessibilityLabel="Password"
+          accessibilityLabel={t('auth.password')}
         />
 
         {error ? (
           <Text variant="caption" tone="negative" style={{ marginTop: theme.spacing.md }}>
-            {error}
+            {t(error.key, error.params)}
           </Text>
         ) : null}
         {notice ? (
           <Text variant="caption" tone="accent" style={{ marginTop: theme.spacing.md }}>
-            {notice}
+            {t(notice)}
           </Text>
         ) : null}
 
         <Button
-          label={isSignUp ? 'Create account' : 'Sign in'}
+          label={isSignUp ? t('auth.createAccount') : t('auth.signIn')}
           onPress={() => void submit()}
           loading={busy}
           disabled={email.trim().length === 0 || password.length === 0}
@@ -149,7 +157,7 @@ export function AuthScreen({ route, navigation }: Props) {
         />
 
         <Button
-          label={isSignUp ? 'I already have an account' : 'Create an account instead'}
+          label={isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}
           variant="ghost"
           onPress={() => {
             setError(null);
@@ -160,16 +168,16 @@ export function AuthScreen({ route, navigation }: Props) {
 
         {!isSignUp ? (
           <Button
-            label="Forgot password"
+            label={t('auth.forgotPassword')}
             variant="ghost"
             onPress={() => {
               if (email.trim().length === 0) {
-                setError('Enter your email first.');
+                setError({ key: 'auth.enterEmailFirst' });
                 return;
               }
               void resetPassword(email.trim())
-                .then(() => setNotice('Check your inbox for a reset link.'))
-                .catch((err) => setError(describeAuthError(err)));
+                .then(() => setNotice('auth.resetSent'))
+                .catch((err) => setError({ key: describeAuthError(err) }));
             }}
           />
         ) : null}

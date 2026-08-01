@@ -2,7 +2,8 @@ import React, { useEffect } from 'react';
 import { Share, View } from 'react-native';
 import Animated, { FadeIn, FadeInUp } from 'react-native-reanimated';
 import { getVariant } from '@/engine/registry';
-import { RATING_COPY } from '@/scoring/scoringEngine';
+import { RATING_KEYS } from '@/scoring/scoringEngine';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { track } from '@/services/analytics';
 import { successFeedback, warningFeedback } from '@/ui/haptics';
 import { Button, Card, Screen, StatTile, Text } from '@/ui/components';
@@ -22,9 +23,10 @@ type Props = RootScreenProps<'Result'>;
  */
 export function ResultScreen({ route, navigation }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const params = route.params;
   const won = params.status === 'won';
-  const copy = RATING_COPY[params.score.rating];
+  const rating = RATING_KEYS[params.score.rating];
   const variant = getVariant(params.moduleId, params.variantId);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export function ResultScreen({ route, navigation }: Props) {
     track('share_result', { mode: params.mode, status: params.status });
     await Share.share({
       message:
-        `MindCode ${params.mode === 'daily' ? 'Daily' : variant.title}\n` +
+        `MindCode ${params.mode === 'daily' ? t('profile.modeDaily') : t(variant.titleKey)}\n` +
         `${won ? `${params.movesUsed}/${params.maxMoves}` : `X/${params.maxMoves}`}  ${grid}\n` +
         `${params.score.total} points`,
     }).catch(() => undefined);
@@ -60,9 +62,9 @@ export function ResultScreen({ route, navigation }: Props) {
       scroll
       footer={
         <View>
-          <Button label="Done" onPress={() => navigation.navigate('Tabs')} />
+          <Button label={t('common.done')} onPress={() => navigation.navigate('Tabs')} />
           <Button
-            label="Share result"
+            label={t('result.share')}
             variant="ghost"
             onPress={() => void share()}
             style={{ marginTop: theme.spacing.sm }}
@@ -73,17 +75,17 @@ export function ResultScreen({ route, navigation }: Props) {
       <Animated.View entering={FadeIn.duration(320)} style={{ alignItems: 'center', paddingTop: theme.spacing.xl }}>
         <Text style={{ fontSize: 48 }}>{won ? '✓' : '·'}</Text>
         <Text variant="title" center style={{ marginTop: theme.spacing.md }}>
-          {copy.title}
+          {t(rating.title)}
         </Text>
         <Text variant="body" tone="muted" center style={{ marginTop: theme.spacing.xs }}>
-          {copy.subtitle}
+          {t(rating.subtitle)}
         </Text>
       </Animated.View>
 
       <Animated.View entering={FadeInUp.delay(160).duration(360)}>
         <Card style={{ marginTop: theme.spacing.xl, alignItems: 'center' }}>
           <Text variant="overline" tone="faint">
-            The code was
+            {t('result.codeWas')}
           </Text>
           <Text
             style={{
@@ -108,19 +110,19 @@ export function ResultScreen({ route, navigation }: Props) {
           marginTop: theme.spacing.lg,
         }}
       >
-        <StatTile label="Score" value={`${params.score.total}`} accent />
-        <StatTile label="XP earned" value={`+${params.score.xp}`} />
+        <StatTile label={t('result.score')} value={`${params.score.total}`} accent />
+        <StatTile label={t('result.xpEarned')} value={`+${params.score.xp}`} />
         <StatTile
-          label="Guesses"
+          label={t('result.guesses')}
           value={won ? `${params.movesUsed}/${params.maxMoves}` : `X/${params.maxMoves}`}
         />
-        <StatTile label="Time" value={formatDuration(params.durationMs)} />
+        <StatTile label={t('result.time')} value={formatDuration(params.durationMs)} />
       </Animated.View>
 
       {params.score.components.length > 0 ? (
         <Card style={{ marginTop: theme.spacing.lg }}>
           <Text variant="overline" tone="faint">
-            How it scored
+            {t('result.howItScored')}
           </Text>
           {params.score.components.map((component) => (
             <View
@@ -132,10 +134,10 @@ export function ResultScreen({ route, navigation }: Props) {
               }}
             >
               <View style={{ flex: 1 }}>
-                <Text variant="body">{component.label}</Text>
-                {component.detail ? (
+                <Text variant="body">{t(component.labelKey)}</Text>
+                {component.detailKey ? (
                   <Text variant="caption" tone="faint">
-                    {component.detail}
+                    {t(component.detailKey, component.detailParams)}
                   </Text>
                 ) : null}
               </View>
@@ -155,10 +157,10 @@ export function ResultScreen({ route, navigation }: Props) {
       {params.score.isPersonalBest ? (
         <Card highlighted style={{ marginTop: theme.spacing.lg }}>
           <Text variant="bodyStrong" tone="accent">
-            🏅 Personal best
+            {t('result.personalBest')}
           </Text>
           <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-            Your highest score yet on {variant.title}.
+            {t('result.personalBestBody', { variant: t(variant.titleKey) })}
           </Text>
         </Card>
       ) : null}
@@ -166,19 +168,19 @@ export function ResultScreen({ route, navigation }: Props) {
       {levelUp && levelUp.type === 'level_up' ? (
         <Card highlighted style={{ marginTop: theme.spacing.lg }}>
           <Text variant="bodyStrong" tone="accent">
-            Level {levelUp.to} — {levelUp.title}
+            {t('result.levelUp', { level: levelUp.to, title: t(levelUp.titleKey) })}
           </Text>
           <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-            A new rank. Harder variants unlock as you climb.
+            {t('result.levelUpBody')}
           </Text>
         </Card>
       ) : null}
 
       {streak && (streak.type === 'streak_extended' || streak.type === 'streak_started') ? (
         <Card style={{ marginTop: theme.spacing.lg }}>
-          <Text variant="bodyStrong">🔥 {streak.current}-day streak</Text>
+          <Text variant="bodyStrong">{t('result.streak', { count: streak.current })}</Text>
           <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-            Come back tomorrow to keep it alive.
+            {t('result.streakBody')}
           </Text>
         </Card>
       ) : null}
@@ -186,9 +188,9 @@ export function ResultScreen({ route, navigation }: Props) {
       {badges.map((badge) =>
         badge.type === 'badge_unlocked' ? (
           <Card key={badge.badgeId} style={{ marginTop: theme.spacing.lg }}>
-            <Text variant="bodyStrong">🏆 {badge.title}</Text>
+            <Text variant="bodyStrong">{t('result.badge', { title: t(badge.titleKey) })}</Text>
             <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-              {badge.description}
+              {t(badge.descriptionKey)}
             </Text>
           </Card>
         ) : null,
@@ -196,12 +198,11 @@ export function ResultScreen({ route, navigation }: Props) {
 
       {params.rejection ? (
         <Text variant="caption" tone="negative" center style={{ marginTop: theme.spacing.lg }}>
-          This game could not be recorded, so it will not count towards your
-          progress. Nothing to retry — sorry.
+          {t('result.rejected')}
         </Text>
       ) : !params.synced ? (
         <Text variant="caption" tone="faint" center style={{ marginTop: theme.spacing.lg }}>
-          Saved on this device — it will sync when you are back online.
+          {t('result.notSynced')}
         </Text>
       ) : null}
     </Screen>

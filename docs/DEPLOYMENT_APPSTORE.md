@@ -128,11 +128,19 @@ inside Firebase's limits.
 1. **Apple Developer Program** — $99/year, and enrolment can take a day or two.
    Start here.
 2. **App Store Connect → My Apps → +** → New App
-   - Platform: iOS · Name: `MindCode` · Primary language
+   - Platform: iOS · Name: `MindCode` · Primary language: English (U.S.)
    - Bundle ID: `com.mindcode.app` — must match `app.config.ts`
    - SKU: `mindcode-001`
 3. Note your **Apple Team ID** (Membership page) and the numeric **App Store
    Connect App ID** (App Information → General).
+4. **Add Turkish as a localization.** The app ships Turkish in full, but the
+   store listing is separate: App Store Connect → your app → the language
+   selector at the top of the version page → *Add Language → Turkish*, then
+   translate the name, subtitle, description, keywords and screenshots. An
+   English-only listing is the single most common reason a fully localized app
+   fails to rank in a market it already supports.
+   The same applies to Google Play → *Grow → Store presence → Main store
+   listing → Manage translations*.
 
 Fill these into `eas.json` under `submit.production.ios`.
 

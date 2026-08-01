@@ -129,7 +129,9 @@ describe('submitGameResult — a legitimate daily win', () => {
 
     const publicProfile = await db.doc(`publicProfiles/${UID}`).get();
     expect(publicProfile.data()?.displayName).toBe(profile.displayName);
-    expect(publicProfile.data()?.title).toBeTruthy();
+    // A translation key, not a rendered name — the server has no locale, and
+    // the leaderboard renders this in whatever language the *reader* chose.
+    expect(publicProfile.data()?.titleKey).toMatch(/^rank\./);
 
     const [global, weekly, daily] = await Promise.all([
       db.doc(`leaderboards/global/entries/${UID}`).get(),

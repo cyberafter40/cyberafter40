@@ -14,8 +14,8 @@ import { plusMinusPolicy } from './policies';
 const variants: GameVariant<NumberLogicConfig>[] = [
   {
     id: 'two-digit',
-    title: 'Two Digits',
-    subtitle: 'A gentle warm-up. 6 guesses.',
+    titleKey: 'variants.twoDigit',
+    subtitleKey: 'variants.twoDigitSubtitle',
     difficulty: 1,
     unlocksAtLevel: 0,
     config: {
@@ -28,8 +28,8 @@ const variants: GameVariant<NumberLogicConfig>[] = [
   },
   {
     id: 'three-digit',
-    title: 'Three Digits',
-    subtitle: 'The classic. 8 guesses.',
+    titleKey: 'variants.threeDigit',
+    subtitleKey: 'variants.threeDigitSubtitle',
     difficulty: 3,
     unlocksAtLevel: 0,
     config: {
@@ -42,8 +42,8 @@ const variants: GameVariant<NumberLogicConfig>[] = [
   },
   {
     id: 'four-digit',
-    title: 'Four Digits',
-    subtitle: 'Serious deduction. 10 guesses.',
+    titleKey: 'variants.fourDigit',
+    subtitleKey: 'variants.fourDigitSubtitle',
     difficulty: 5,
     unlocksAtLevel: 8,
     config: {
@@ -63,8 +63,8 @@ export const numberLogicModule: GameModule<
   NumberLogicConfig
 > = {
   id: 'number-logic',
-  title: 'Number Logic',
-  tagline: 'Crack the hidden code.',
+  titleKey: 'modules.numberLogic',
+  taglineKey: 'modules.numberLogicTagline',
   category: 'logic',
   icon: '🔢',
   status: 'live',

@@ -88,13 +88,13 @@ export const numberLogicEngine: GameEngine<
 
   validateMove(state: NumberLogicState, move: NumberLogicMove): MoveValidation {
     if (state.status !== 'in_progress') {
-      return invalid('game_over', 'This game has already finished.');
+      return invalid('game_over', 'numberLogic.errorGameOver');
     }
     if (!isWellFormedGuess(move.guess, state.config)) {
-      return invalid('malformed', `Enter ${state.config.digits} digits.`);
+      return invalid('malformed', 'numberLogic.errorMalformed', { digits: state.config.digits });
     }
     if (state.attempts.some((a) => a.guess === move.guess)) {
-      return invalid('duplicate', 'You already tried that code.');
+      return invalid('duplicate', 'numberLogic.errorDuplicate');
     }
     return VALID;
   },

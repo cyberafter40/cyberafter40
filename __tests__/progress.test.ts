@@ -1,5 +1,6 @@
 import type { GameResult } from '@/engine/session';
-import { describeLevel, levelForXp, levelTitle, MAX_LEVEL, totalXpForLevel } from '@/progress/levels';
+import { describeLevel, levelForXp, levelTitleKey, MAX_LEVEL, totalXpForLevel } from '@/progress/levels';
+import { t } from '@/i18n';
 import { applyGameResult } from '@/progress/progressEngine';
 import { applyStreak, effectiveStreak, isStreakAtRisk } from '@/progress/streak';
 import { averageMoves, averageScore, createProfile, type UserProfile } from '@/progress/types';
@@ -55,12 +56,15 @@ function score(overrides: Partial<ScoreBreakdown> = {}): ScoreBreakdown {
 describe('levels', () => {
   it('starts at level 1 with no XP', () => {
     expect(levelForXp(0)).toBe(1);
-    expect(levelTitle(1)).toBe('Beginner');
+    expect(t(levelTitleKey(1))).toBe('Beginner');
   });
 
+  // The brief names these three ranks explicitly, so they are asserted on the
+  // rendered string rather than the key — a renamed key must not silently
+  // change what the player is called.
   it('uses the titles named in the product brief', () => {
-    expect(levelTitle(10)).toBe('Logic Explorer');
-    expect(levelTitle(50)).toBe('Mind Master');
+    expect(t(levelTitleKey(10))).toBe('Logic Explorer');
+    expect(t(levelTitleKey(50))).toBe('Mind Master');
   });
 
   it('is monotonic and caps at MAX_LEVEL', () => {

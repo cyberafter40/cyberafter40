@@ -135,9 +135,14 @@ the duplicate check inside the transaction and is ignored.
 A world-readable slice, so the full profile can stay private.
 
 ```ts
-{ uid, displayName, avatarId, countryCode, level, xp, title,
+{ uid, displayName, avatarId, countryCode, level, xp, titleKey,
   currentStreak, badgeCount, updatedAt }
 ```
+
+`titleKey` is a translation key (`rank.logicExplorer`), not a rendered name.
+A leaderboard row is read by *other* players, so the reader's language has to
+win over the writer's — and the writer here is a Cloud Function, which has no
+language at all.
 
 ## `challenges/{YYYY-MM-DD}`
 

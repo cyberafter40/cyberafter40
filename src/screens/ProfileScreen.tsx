@@ -24,6 +24,7 @@ import {
   StatTile,
   Text,
 } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 import { formatDuration } from '@/utils/date';
 import type { TabScreenProps } from '@/navigation/types';
@@ -39,6 +40,7 @@ type Props = TabScreenProps<'Profile'>;
  */
 export function ProfileScreen({ navigation }: Props) {
   const theme = useTheme();
+  const { t, locale } = useTranslation();
   const { user } = useAuth();
   const { profile, streak } = useProfile();
   const [recent, setRecent] = useState<SessionDoc[]>([]);
@@ -61,7 +63,7 @@ export function ProfileScreen({ navigation }: Props) {
   if (!profile) {
     return (
       <Screen>
-        <EmptyState icon="👤" title="Loading profile" message="Just a moment." />
+        <EmptyState icon="👤" title={t('profile.loading')} message={t('common.loading')} />
       </Screen>
     );
   }
@@ -79,11 +81,11 @@ export function ProfileScreen({ navigation }: Props) {
           {profile.displayName}
         </Text>
         <Text variant="body" tone="accent" center>
-          {level.title}
+          {t(level.titleKey)}
         </Text>
         {profile.isAnonymous ? (
           <Button
-            label="Create an account to save progress"
+            label={t('profile.createAccount')}
             variant="secondary"
             fullWidth={false}
             onPress={() => navigation.navigate('Auth', { intent: 'sign_up' })}
@@ -95,24 +97,32 @@ export function ProfileScreen({ navigation }: Props) {
       <Card style={{ marginTop: theme.spacing.xl }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text variant="caption" tone="muted">
-            Level {level.level}
+            {t('common.level', { level: level.level })}
           </Text>
           <Text variant="caption" tone="muted">
-            {profile.xp.toLocaleString()} XP
+            {profile.xp.toLocaleString()} {t('common.xp')}
           </Text>
         </View>
         <ProgressBar value={level.ratio} style={{ marginTop: theme.spacing.md }} />
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.sm }}>
           {level.isMaxLevel
-            ? 'You have reached the highest rank.'
+            ? t('profile.maxRank')
             : nextRank
-              ? `${level.xpForNextLevel - level.xpIntoLevel} XP to level ${level.level + 1} · ${nextRank.title} at level ${nextRank.minLevel}`
-              : `${level.xpForNextLevel - level.xpIntoLevel} XP to level ${level.level + 1}`}
+              ? t('profile.nextRank', {
+                  xp: level.xpForNextLevel - level.xpIntoLevel,
+                  level: level.level + 1,
+                  title: t(nextRank.titleKey),
+                  rankLevel: nextRank.minLevel,
+                })
+              : t('profile.nextLevel', {
+                  xp: level.xpForNextLevel - level.xpIntoLevel,
+                  level: level.level + 1,
+                })}
         </Text>
       </Card>
 
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        Statistics
+        {t('profile.statistics')}
       </Text>
       <View
         style={{
@@ -122,40 +132,44 @@ export function ProfileScreen({ navigation }: Props) {
           marginTop: theme.spacing.md,
         }}
       >
-        <StatTile label="Games played" value={`${stats.played}`} hint={`${stats.won} solved`} />
         <StatTile
-          label="Win rate"
+          label={t('profile.gamesPlayed')}
+          value={`${stats.played}`}
+          hint={t('profile.gamesSolved', { count: stats.won })}
+        />
+        <StatTile
+          label={t('profile.winRate')}
           value={stats.played === 0 ? '—' : `${Math.round(winRate(stats) * 100)}%`}
         />
         <StatTile
-          label="Average score"
+          label={t('profile.averageScore')}
           value={stats.played === 0 ? '—' : `${averageScore(stats)}`}
           accent
         />
-        <StatTile label="Best score" value={`${stats.bestScore}`} />
+        <StatTile label={t('profile.bestScore')} value={`${stats.bestScore}`} />
         <StatTile
-          label="Avg. guesses"
+          label={t('profile.averageGuesses')}
           value={stats.played === 0 ? '—' : `${averageMoves(stats)}`}
-          hint={`${stats.totalMoves} total attempts`}
+          hint={t('profile.totalAttempts', { count: stats.totalMoves })}
         />
         <StatTile
-          label="Avg. time"
+          label={t('profile.averageTime')}
           value={stats.played === 0 ? '—' : formatDuration(averageDurationMs(stats))}
         />
         <StatTile
-          label="Current streak"
+          label={t('profile.currentStreak')}
           value={streak > 0 ? `${streak} 🔥` : '0'}
-          hint={`longest ${profile.streak.longest}`}
+          hint={t('profile.longestStreak', { count: profile.streak.longest })}
         />
-        <StatTile label="Daily challenges" value={`${stats.dailyCompleted}`} />
+        <StatTile label={t('profile.dailyChallenges')} value={`${stats.dailyCompleted}`} />
       </View>
 
       <Card onPress={() => navigation.navigate('Badges')} style={{ marginTop: theme.spacing.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ flex: 1 }}>
-            <Text variant="bodyStrong">Badges</Text>
+            <Text variant="bodyStrong">{t('profile.badges')}</Text>
             <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-              {unlockedBadges} of {BADGES.length} unlocked
+              {t('profile.badgesUnlocked', { unlocked: unlockedBadges, total: BADGES.length })}
             </Text>
           </View>
           <Text variant="body" tone="faint">
@@ -165,14 +179,16 @@ export function ProfileScreen({ navigation }: Props) {
       </Card>
 
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        By variant
+        {t('profile.byVariant')}
       </Text>
       {Object.entries(profile.modules).flatMap(([moduleId, moduleStats]) =>
         Object.entries(moduleStats.variants).map(([variantId, variantStats]) => {
           let title = variantId;
           try {
-            title =
-              getGameModule(moduleId).variants.find((v) => v.id === variantId)?.title ?? variantId;
+            const titleKey = getGameModule(moduleId).variants.find(
+              (v) => v.id === variantId,
+            )?.titleKey;
+            if (titleKey) title = t(titleKey);
           } catch {
             /* module no longer registered — fall back to the raw id */
           }
@@ -182,8 +198,13 @@ export function ProfileScreen({ navigation }: Props) {
                 <View style={{ flex: 1 }}>
                   <Text variant="bodyStrong">{title}</Text>
                   <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                    {variantStats.won}/{variantStats.played} solved
-                    {variantStats.bestMoves > 0 ? ` · best ${variantStats.bestMoves} guesses` : ''}
+                    {t('profile.variantRecord', {
+                      won: variantStats.won,
+                      played: variantStats.played,
+                    })}
+                    {variantStats.bestMoves > 0
+                      ? t('profile.variantBest', { count: variantStats.bestMoves })
+                      : ''}
                   </Text>
                 </View>
                 <Text variant="bodyStrong" tone="accent">
@@ -196,16 +217,16 @@ export function ProfileScreen({ navigation }: Props) {
       )}
       {Object.keys(profile.modules).length === 0 ? (
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.md }}>
-          Play a game to start building your record.
+          {t('profile.noRecord')}
         </Text>
       ) : null}
 
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        Recent games
+        {t('profile.recentGames')}
       </Text>
       {recent.length === 0 ? (
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.md }}>
-          Your last games will appear here once they sync.
+          {t('profile.noRecentGames')}
         </Text>
       ) : (
         recent.map((session) => (
@@ -225,9 +246,9 @@ export function ProfileScreen({ navigation }: Props) {
             <View style={{ flex: 1 }}>
               <Text variant="body">{session.solution}</Text>
               <Text variant="caption" tone="faint">
-                {new Date(session.finishedAt).toLocaleDateString()} ·{' '}
-                {session.mode === 'daily' ? 'Daily' : 'Classic'} · {session.movesUsed}/
-                {session.maxMoves}
+                {new Date(session.finishedAt).toLocaleDateString(locale)} ·{' '}
+                {session.mode === 'daily' ? t('profile.modeDaily') : t('profile.modeClassic')} ·{' '}
+                {session.movesUsed}/{session.maxMoves}
               </Text>
             </View>
             <Text variant="bodyStrong" tone="muted">
@@ -238,7 +259,7 @@ export function ProfileScreen({ navigation }: Props) {
       )}
 
       <Button
-        label="Settings"
+        label={t('profile.settings')}
         variant="secondary"
         onPress={() => navigation.navigate('Settings')}
         style={{ marginTop: theme.spacing.xxl }}

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { GameRendererProps } from '@/games/renderers';
 import { CodeSlots, GuessRow, Keypad, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { errorFeedback, submitFeedback, successFeedback } from '@/ui/haptics';
 import { useTheme } from '@/ui/ThemeProvider';
 import { eliminatedDigits, type NumberLogicFeedback, type NumberLogicState } from './engine';
@@ -17,6 +18,7 @@ import { getFeedbackPolicy } from './policies';
  */
 export function NumberPadBoard({ session, onFinished }: GameRendererProps) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const state = session.state<NumberLogicState>();
   const { config } = state;
   const policy = getFeedbackPolicy(config.policyId);
@@ -76,12 +78,16 @@ export function NumberPadBoard({ session, onFinished }: GameRendererProps) {
 
         <Text
           variant="caption"
-          tone={session.errorMessage ? 'negative' : 'faint'}
+          tone={session.error ? 'negative' : 'faint'}
           center
           style={{ marginTop: theme.spacing.md, height: 20 }}
         >
-          {session.errorMessage ??
-            `${attemptsLeft} guess${attemptsLeft === 1 ? '' : 'es'} left · ${policy.label}`}
+          {session.error
+            ? t(session.error.key, session.error.params)
+            : t('numberLogic.guessesLeft', {
+                count: attemptsLeft,
+                policy: t(policy.labelKey),
+              })}
         </Text>
       </View>
 
@@ -92,8 +98,7 @@ export function NumberPadBoard({ session, onFinished }: GameRendererProps) {
       >
         {state.attempts.length === 0 ? (
           <Text variant="caption" tone="faint" center style={{ paddingVertical: theme.spacing.xl }}>
-            Enter any {config.digits}-digit code to begin.{'\n'}
-            Every answer narrows it down.
+            {t('numberLogic.emptyHint', { digits: config.digits })}
           </Text>
         ) : (
           [...state.attempts].reverse().map((attempt) => {
@@ -117,6 +122,7 @@ export function NumberPadBoard({ session, onFinished }: GameRendererProps) {
         onDigit={pushDigit}
         onDelete={deleteDigit}
         onSubmit={submit}
+        submitLabel={t('numberLogic.check')}
         canSubmit={entry.length === config.digits && !session.isOver}
         canDelete={entry.length > 0}
         disabled={session.isOver}

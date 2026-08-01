@@ -81,14 +81,3 @@ export async function fetchMyEntry(
   return snapshot.exists() ? (snapshot.data() as LeaderboardEntryDoc) : null;
 }
 
-export const PERIOD_LABELS: Record<LeaderboardPeriod, string> = {
-  daily: 'Today',
-  weekly: 'This week',
-  global: 'All time',
-};
-
-export const PERIOD_METRIC_LABELS: Record<LeaderboardPeriod, string> = {
-  daily: 'score',
-  weekly: 'XP',
-  global: 'XP',
-};

@@ -1,3 +1,4 @@
+import type { LocalePreference, TranslationKey } from '@/i18n/types';
 import type { DateKey } from '@/utils/date';
 
 /**
@@ -69,6 +70,8 @@ export interface UserSettings {
   reducedMotion: boolean;
   dailyReminder: boolean;
   theme: 'system' | 'light' | 'dark';
+  /** `system` follows the device language; otherwise a supported locale. */
+  locale: LocalePreference;
 }
 
 export interface UserProfile {
@@ -96,8 +99,13 @@ export interface UserProfile {
 
 export type ProgressEvent =
   | { type: 'xp_gained'; amount: number; total: number }
-  | { type: 'level_up'; from: number; to: number; title: string }
-  | { type: 'badge_unlocked'; badgeId: string; title: string; description: string }
+  | { type: 'level_up'; from: number; to: number; titleKey: TranslationKey }
+  | {
+      type: 'badge_unlocked';
+      badgeId: string;
+      titleKey: TranslationKey;
+      descriptionKey: TranslationKey;
+    }
   | { type: 'streak_extended'; current: number; isLongest: boolean }
   | { type: 'streak_started'; current: number }
   | { type: 'streak_broken'; previous: number }
@@ -115,6 +123,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   reducedMotion: false,
   dailyReminder: true,
   theme: 'system',
+  locale: 'system',
 };
 
 export function emptyGlobalStats(): GlobalStats {

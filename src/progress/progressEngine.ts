@@ -1,7 +1,7 @@
 import type { GameResult } from '@/engine/session';
 import type { ScoreBreakdown } from '@/scoring/types';
 import { evaluateBadges } from './badges';
-import { describeLevel, levelForXp, levelTitle } from './levels';
+import { describeLevel, levelForXp, levelTitleKey } from './levels';
 import { applyStreak } from './streak';
 import {
   emptyModuleStats,
@@ -86,7 +86,7 @@ export function applyGameResult(input: {
       type: 'level_up',
       from: input.profile.level,
       to: level,
-      title: levelTitle(level),
+      titleKey: levelTitleKey(level),
     });
   }
 
@@ -115,8 +115,8 @@ export function applyGameResult(input: {
       events.push({
         type: 'badge_unlocked',
         badgeId: badge.id,
-        title: badge.title,
-        description: badge.description,
+        titleKey: badge.titleKey,
+        descriptionKey: badge.descriptionKey,
       });
     }
     updated.badges = badges;

@@ -10,6 +10,7 @@ import { useAuth } from '@/state/AuthContext';
 import { useDailyChallenge } from '@/state/useDailyChallenge';
 import { useProfile } from '@/state/ProfileContext';
 import { Avatar, Button, Card, ProgressBar, Screen, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 import { formatCountdown } from '@/utils/date';
 import type { TabScreenProps } from '@/navigation/types';
@@ -25,6 +26,7 @@ type Props = TabScreenProps<'Home'>;
  */
 export function HomeScreen({ navigation }: Props) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { profile, streak } = useProfile();
   const { challenge, entry, msRemaining, refresh } = useDailyChallenge(user?.uid ?? null);
@@ -71,10 +73,10 @@ export function HomeScreen({ navigation }: Props) {
         <Avatar avatarId={profile?.avatarId ?? 0} size={52} level={level.level} />
         <View style={{ flex: 1, marginLeft: theme.spacing.lg }}>
           <Text variant="heading" numberOfLines={1}>
-            {profile?.displayName ?? 'Welcome'}
+            {profile?.displayName ?? t('home.welcome')}
           </Text>
           <Text variant="caption" tone="muted">
-            {level.title}
+            {t(level.titleKey)}
           </Text>
         </View>
         <View
@@ -90,7 +92,7 @@ export function HomeScreen({ navigation }: Props) {
             {streak > 0 ? `🔥 ${streak}` : '—'}
           </Text>
           <Text variant="caption" tone="faint">
-            streak
+            {t('common.streak')}
           </Text>
         </View>
       </View>
@@ -98,35 +100,41 @@ export function HomeScreen({ navigation }: Props) {
       <View style={{ marginTop: theme.spacing.lg }}>
         <ProgressBar
           value={level.ratio}
-          accessibilityLabel={`Level ${level.level} progress`}
+          accessibilityLabel={t('a11y.levelProgress', { level: level.level })}
         />
         <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.sm }}>
           {level.isMaxLevel
-            ? `${profile?.xp ?? 0} XP · maximum level`
-            : `${level.xpIntoLevel} / ${level.xpForNextLevel} XP to level ${level.level + 1}`}
+            ? t('home.maxLevel', { xp: profile?.xp ?? 0 })
+            : t('home.xpToNextLevel', {
+                into: level.xpIntoLevel,
+                span: level.xpForNextLevel,
+                level: level.level + 1,
+              })}
         </Text>
       </View>
 
       {/* Daily Challenge */}
       <Card highlighted={!alreadyPlayed} style={{ marginTop: theme.spacing.xl }}>
         <Text variant="overline" tone="accent">
-          Daily Challenge
+          {t('home.dailyChallenge')}
         </Text>
         <Text variant="title" style={{ marginTop: theme.spacing.sm }}>
-          {dailyVariant?.title ?? 'Today’s code'}
+          {dailyVariant ? t(dailyVariant.titleKey) : t('home.dailyChallenge')}
         </Text>
         <Text variant="body" tone="muted" style={{ marginTop: theme.spacing.xs }}>
           {alreadyPlayed
             ? entry?.status === 'won'
-              ? `Solved in ${entry.movesUsed} guess${entry.movesUsed === 1 ? '' : 'es'} for ${entry.score} points.`
-              : 'You have used today’s attempt. The code stays secret until tomorrow.'
-            : 'Everyone in the world gets the same code today. One attempt.'}
+              ? t('home.dailySolved', { count: entry.movesUsed, score: entry.score })
+              : t('home.dailySpent')
+            : t('home.dailyIntro')}
         </Text>
 
         {challenge.stats && challenge.stats.played > 0 ? (
           <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.md }}>
-            {challenge.stats.played.toLocaleString()} played ·{' '}
-            {Math.round((challenge.stats.solved / challenge.stats.played) * 100)}% solved
+            {t('home.communityStats', {
+              played: challenge.stats.played.toLocaleString(),
+              percent: Math.round((challenge.stats.solved / challenge.stats.played) * 100),
+            })}
           </Text>
         ) : null}
 
@@ -134,14 +142,14 @@ export function HomeScreen({ navigation }: Props) {
           {alreadyPlayed ? (
             <View style={{ alignItems: 'center' }}>
               <Text variant="caption" tone="faint">
-                Next challenge in
+                {t('home.nextChallenge')}
               </Text>
               <Text variant="heading" tone="accent" style={{ marginTop: theme.spacing.xs }}>
                 {formatCountdown(msRemaining)}
               </Text>
             </View>
           ) : (
-            <Button label="Play today’s code" onPress={startDaily} icon="▶" />
+            <Button label={t('home.play')} onPress={startDaily} icon="▶" />
           )}
         </View>
       </Card>
@@ -152,10 +160,10 @@ export function HomeScreen({ navigation }: Props) {
       {listLiveGameModules().map((module) => (
         <View key={module.id}>
           <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-            {module.icon}  {module.title}
+            {module.icon}  {t(module.titleKey)}
           </Text>
           <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.xs }}>
-            {module.tagline}
+            {t(module.taglineKey)}
           </Text>
 
           {module.variants.map((variant) => {
@@ -169,9 +177,9 @@ export function HomeScreen({ navigation }: Props) {
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View style={{ flex: 1 }}>
-                      <Text variant="bodyStrong">{variant.title}</Text>
+                      <Text variant="bodyStrong">{t(variant.titleKey)}</Text>
                       <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                        Unlocks at level {variant.unlocksAtLevel}
+                        {t('home.unlocksAtLevel', { level: variant.unlocksAtLevel })}
                       </Text>
                     </View>
                     <Text variant="caption" tone="faint">
@@ -186,14 +194,17 @@ export function HomeScreen({ navigation }: Props) {
               <Card
                 key={variant.id}
                 onPress={() => startClassic(module.id, variant.id)}
-                accessibilityLabel={`Play ${module.title}, ${variant.title}`}
+                accessibilityLabel={t('home.playVariant', {
+                  module: t(module.titleKey),
+                  variant: t(variant.titleKey),
+                })}
                 style={{ marginTop: theme.spacing.md }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={{ flex: 1 }}>
-                    <Text variant="bodyStrong">{variant.title}</Text>
+                    <Text variant="bodyStrong">{t(variant.titleKey)}</Text>
                     <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                      {variant.subtitle}
+                      {t(variant.subtitleKey)}
                     </Text>
                   </View>
                   <Text variant="caption" tone="faint">
@@ -208,10 +219,10 @@ export function HomeScreen({ navigation }: Props) {
 
       {/* Roadmap */}
       <Text variant="overline" tone="faint" style={{ marginTop: theme.spacing.xxl }}>
-        Coming to MindCode
+        {t('home.comingSoon')}
       </Text>
       <Text variant="caption" tone="faint" style={{ marginTop: theme.spacing.xs }}>
-        More ways to train, built on the same engine.
+        {t('home.comingSoonBody')}
       </Text>
       {listGameModules()
         .filter((module) => module.status === 'coming_soon')
@@ -220,9 +231,9 @@ export function HomeScreen({ navigation }: Props) {
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ fontSize: 22, marginRight: theme.spacing.lg }}>{module.icon}</Text>
               <View style={{ flex: 1 }}>
-                <Text variant="bodyStrong">{module.title}</Text>
+                <Text variant="bodyStrong">{t(module.titleKey)}</Text>
                 <Text variant="caption" tone="muted" style={{ marginTop: 2 }}>
-                  {module.tagline}
+                  {t(module.taglineKey)}
                 </Text>
               </View>
             </View>
@@ -230,7 +241,7 @@ export function HomeScreen({ navigation }: Props) {
         ))}
 
       <Button
-        label="How to play"
+        label={t('home.howToPlay')}
         variant="ghost"
         onPress={() => {
           track('screen_view', { screen: 'HowToPlay' });

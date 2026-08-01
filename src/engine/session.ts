@@ -128,7 +128,7 @@ export class GameSession {
   /** Checks a move without applying it — used to enable/disable the submit button. */
   validate(move: unknown): MoveValidation {
     if (this.isOver) {
-      return { ok: false, code: 'game_over', message: 'This game has already finished.' };
+      return { ok: false, code: 'game_over', messageKey: 'numberLogic.errorGameOver' };
     }
     return this.module.engine.validateMove(this.state, move);
   }

@@ -183,6 +183,30 @@ test.describe('MindCode end to end', () => {
     await expect(page.getByRole('button', { name: 'Tile 1' })).toBeEnabled();
   });
 
+  test('switches language from settings and keeps it across a reload', async ({ page }) => {
+    await freshInstall(page);
+    await completeOnboarding(page);
+
+    await page.getByRole('link', { name: /You/ }).click();
+    await page.getByRole('button', { name: 'Settings', exact: true }).click();
+
+    await expect(page.getByText('Language')).toBeVisible();
+    await page.getByRole('radio', { name: 'Türkçe' }).click();
+
+    // Assert on copy that only Settings has. React Navigation keeps the Profile
+    // screen mounted (hidden) behind this one, and its own "Settings" button
+    // would otherwise satisfy a match on the word "Ayarlar".
+    await expect(page.getByText('Görünen ad')).toBeVisible();
+    await expect(page.getByText('Tercihler')).toBeVisible();
+
+    // The preference is written to the profile document, so a reload has to
+    // bring it back from Firestore rather than from local component state.
+    await page.reload();
+    await expect(page.getByText('Günün Meydan Okuması').first()).toBeVisible();
+    await expect(page.getByText(/Sayı Mantığı/).first()).toBeVisible();
+    await expect(page.getByText('Daily Challenge')).toHaveCount(0);
+  });
+
   test('survives a reload without losing the signed-in session', async ({ page }) => {
     await freshInstall(page);
     await completeOnboarding(page);

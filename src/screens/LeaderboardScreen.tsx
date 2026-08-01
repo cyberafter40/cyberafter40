@@ -1,18 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
-import { levelTitle } from '@/progress/levels';
+import { levelTitleKey } from '@/progress/levels';
 import { track } from '@/services/analytics';
 import {
   fetchLeaderboard,
   fetchMyEntry,
-  PERIOD_LABELS,
-  PERIOD_METRIC_LABELS,
   type LeaderboardPeriod,
   type LeaderboardRow,
 } from '@/services/firestore/leaderboard';
 import type { LeaderboardEntryDoc } from '@/services/firestore/schema';
 import { useAuth } from '@/state/AuthContext';
 import { Avatar, EmptyState, Screen, SegmentedControl, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 
 /**
@@ -23,8 +22,16 @@ import { useTheme } from '@/ui/ThemeProvider';
  * am I?" — the only question that keeps a leaderboard motivating rather than
  * discouraging.
  */
+/** Metric names, as translation keys rather than the repository's English. */
+const PERIOD_METRIC_KEYS = {
+  daily: 'leaderboard.metricScore',
+  weekly: 'leaderboard.metricXp',
+  global: 'leaderboard.metricXp',
+} as const;
+
 export function LeaderboardScreen() {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   const [period, setPeriod] = useState<LeaderboardPeriod>('daily');
@@ -43,11 +50,11 @@ export function LeaderboardScreen() {
       setRows(board);
       setMine(own);
     } catch {
-      setError('Could not load the leaderboard. Pull to retry.');
+      setError(t('leaderboard.errorBody'));
     } finally {
       setLoading(false);
     }
-  }, [period, user]);
+  }, [period, user, t]);
 
   useEffect(() => {
     setLoading(true);
@@ -59,9 +66,9 @@ export function LeaderboardScreen() {
 
   return (
     <Screen>
-      <Text variant="title">Leaderboard</Text>
+      <Text variant="title">{t('leaderboard.title')}</Text>
       <Text variant="caption" tone="muted" style={{ marginTop: theme.spacing.xs }}>
-        Ranked by {PERIOD_METRIC_LABELS[period]}.
+        {t('leaderboard.rankedBy', { metric: t(PERIOD_METRIC_KEYS[period]) })}
       </Text>
 
       <View style={{ marginTop: theme.spacing.lg }}>
@@ -69,9 +76,9 @@ export function LeaderboardScreen() {
           value={period}
           onChange={setPeriod}
           options={[
-            { value: 'daily', label: PERIOD_LABELS.daily },
-            { value: 'weekly', label: PERIOD_LABELS.weekly },
-            { value: 'global', label: PERIOD_LABELS.global },
+            { value: 'daily', label: t('leaderboard.today') },
+            { value: 'weekly', label: t('leaderboard.thisWeek') },
+            { value: 'global', label: t('leaderboard.allTime') },
           ]}
         />
       </View>
@@ -89,12 +96,10 @@ export function LeaderboardScreen() {
           {rows.length === 0 ? (
             <EmptyState
               icon="🏁"
-              title={error ? 'Nothing to show' : 'Be the first'}
+              title={error ? t('leaderboard.errorTitle') : t('leaderboard.emptyTitle')}
               message={
                 error ??
-                (period === 'daily'
-                  ? 'No one has finished today’s challenge yet. Play it and take the top spot.'
-                  : 'Scores will appear here as players complete games.')
+                (period === 'daily' ? t('leaderboard.emptyDaily') : t('leaderboard.emptyOther'))
               }
             />
           ) : (
@@ -104,7 +109,7 @@ export function LeaderboardScreen() {
           {mine && !inVisibleBoard ? (
             <View style={{ marginTop: theme.spacing.lg }}>
               <Text variant="overline" tone="faint">
-                Your position
+                {t('leaderboard.yourPosition')}
               </Text>
               <Row
                 row={{ ...mine, rank: 0, isCurrentUser: true }}
@@ -131,13 +136,27 @@ function Row({
   hideRank?: boolean;
 }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const medal = ['🥇', '🥈', '🥉'][row.rank - 1];
 
   return (
     <View
       accessible
       accessibilityRole="text"
-      accessibilityLabel={`${hideRank ? '' : `Rank ${row.rank}, `}${row.displayName}, ${row.score} ${PERIOD_METRIC_LABELS[period]}`}
+      accessibilityLabel={
+        hideRank
+          ? t('a11y.leaderboardRowNoRank', {
+              name: row.displayName,
+              score: row.score,
+              metric: t(PERIOD_METRIC_KEYS[period]),
+            })
+          : t('a11y.leaderboardRow', {
+              rank: row.rank,
+              name: row.displayName,
+              score: row.score,
+              metric: t(PERIOD_METRIC_KEYS[period]),
+            })
+      }
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -158,8 +177,8 @@ function Row({
         </Text>
         <Text variant="caption" tone="faint">
           {period === 'daily'
-            ? `${row.movesUsed ?? '—'} guesses`
-            : `Level ${row.level} · ${levelTitle(row.level)}`}
+            ? t('leaderboard.guesses', { count: row.movesUsed ?? 0 })
+            : `${t('common.level', { level: row.level })} · ${t(levelTitleKey(row.level))}`}
         </Text>
       </View>
       <Text variant="bodyStrong" tone={row.isCurrentUser ? 'accent' : 'default'}>

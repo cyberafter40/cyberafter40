@@ -50,7 +50,7 @@ meaningful, not merely non-crashing. See
 ├─────────────────────────────────────────────────────────────┤
 │ games/                         concrete game modules         │
 ├─────────────────────────────────────────────────────────────┤
-│ engine/   scoring/   progress/  daily/   utils/              │
+│ engine/  scoring/  progress/  daily/  utils/  i18n/          │
 │                                PURE — no React, no Firebase  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -70,6 +70,31 @@ grep -rn "from 'react\|from 'firebase\|from '@/services" \
 ```
 
 Anything it prints is a bug.
+
+### A corollary: no layer below the screens holds a sentence
+
+The same purity that lets the server run the app's code means the server would
+otherwise be picking the player's language. So nothing in the bottom band
+returns prose. A module descriptor, a variant, a badge, a rank, a feedback
+policy, a scoring rule and an engine's move rejection all carry a
+`TranslationKey`; the rendering component is the only place that turns one into
+words.
+
+This is enforced, not conventional: those fields are *typed* as `TranslationKey`
+(a union of every key in the English catalogue), so an English string in a data
+table is a compile error rather than a bug someone notices in a screenshot.
+
+```ts
+// src/games/numberLogic/module.ts — data, in no language
+{ id: 'two-digit', titleKey: 'variants.twoDigit', subtitleKey: 'variants.twoDigitSubtitle', … }
+
+// src/screens/HomeScreen.tsx — the only layer that speaks
+<Text variant="bodyStrong">{t(variant.titleKey)}</Text>
+```
+
+The one consequence worth knowing about: `publicProfiles/{uid}` stores
+`titleKey`, not a rank name, because a leaderboard row is read by *other*
+players — the reader's language wins, not the writer's.
 
 ---
 

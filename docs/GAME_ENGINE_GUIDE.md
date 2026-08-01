@@ -129,17 +129,19 @@ import { recallScoringProfile } from '@/scoring/profiles';
 
 export const memoryGridModule: GameModule<…> = {
   id: 'memory-grid',
-  title: 'Memory Grid',
-  tagline: 'Hold the pattern, then rebuild it.',
+  titleKey: 'modules.memoryGrid',            // a key, never a sentence
+  taglineKey: 'modules.memoryGridTagline',
   category: 'memory',
   icon: '🧠',
   status: 'live',
   engine: memoryGridEngine,
   variants: [
-    { id: 'short', title: 'Four Tiles', subtitle: 'A gentle warm-up.', difficulty: 1,
+    { id: 'short', titleKey: 'variants.memoryShort',
+      subtitleKey: 'variants.memoryShortSubtitle', difficulty: 1,
       unlocksAtLevel: 0,
       config: { size: 3, sequenceLength: 4, maxMistakes: 2, revealMs: 620 } },
-    { id: 'long', title: 'Nine Tiles', subtitle: 'Serious recall.', difficulty: 5,
+    { id: 'long', titleKey: 'variants.memoryLong',
+      subtitleKey: 'variants.memoryLongSubtitle', difficulty: 5,
       unlocksAtLevel: 5,
       config: { size: 4, sequenceLength: 9, maxMistakes: 3, revealMs: 500 } },
   ],
@@ -153,6 +155,14 @@ export const memoryGridModule: GameModule<…> = {
 `variants` are difficulty rungs. `unlocksAtLevel` gates them behind progression
 — the home screen renders locked variants automatically. `dailyVariantPool`
 declares which variants the Daily Challenge may rotate through.
+
+Every user-visible name is a `TranslationKey`, not a string — the type is a
+union of the keys in `src/i18n/en.ts`, so writing prose here does not compile.
+Add your module's names to `src/i18n/en.ts`, and `src/i18n/tr.ts` will fail to
+build until it covers them. The same rule applies to anything else your engine
+surfaces: `invalid('out_of_range', 'memoryGrid.errorOutOfRange')` rather than a
+sentence, because engines are replayed inside the Cloud Functions and the server
+does not know what language the player reads.
 
 If the stock rules do not fit, write a new `ScoringProfile` in
 `src/scoring/profiles.ts` from the rules in `src/scoring/rules.ts` (or add new

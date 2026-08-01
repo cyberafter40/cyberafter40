@@ -2,6 +2,8 @@ import React, { type ReactElement, type ReactNode } from 'react';
 import { render, type RenderOptions } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registerAllGameModules } from '@/games';
+import { LocaleProvider } from '@/i18n/LocaleProvider';
+import type { LocalePreference } from '@/i18n/types';
 import { createProfile, type UserProfile } from '@/progress/types';
 import { ThemeProvider } from '@/ui/ThemeProvider';
 
@@ -34,16 +36,31 @@ export function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
   };
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({
+  children,
+  locale = 'en',
+}: {
+  children: ReactNode;
+  locale?: LocalePreference;
+}) {
   return (
     <SafeAreaProvider initialMetrics={INSETS}>
-      <ThemeProvider preference="dark">{children}</ThemeProvider>
+      <LocaleProvider preference={locale}>
+        <ThemeProvider preference="dark">{children}</ThemeProvider>
+      </LocaleProvider>
     </SafeAreaProvider>
   );
 }
 
-export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
-  return render(ui, { wrapper: Providers, ...options });
+export function renderWithProviders(
+  ui: ReactElement,
+  options?: RenderOptions & { locale?: LocalePreference },
+) {
+  const { locale = 'en', ...rest } = options ?? {};
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <Providers locale={locale}>{children}</Providers>
+  );
+  return render(ui, { wrapper, ...rest });
 }
 
 export * from '@testing-library/react-native';

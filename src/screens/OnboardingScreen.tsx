@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { markOnboarded } from '@/services/storage';
 import { Button, CodeSlots, GuessRow, Screen, Text } from '@/ui/components';
+import { useTranslation } from '@/i18n/LocaleProvider';
 import { useTheme } from '@/ui/ThemeProvider';
 
 interface Slide {
@@ -21,17 +22,18 @@ interface Slide {
  */
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const theme = useTheme();
+  const { t } = useTranslation();
   const [index, setIndex] = useState(0);
 
   const slides: Slide[] = [
     {
-      title: 'A hidden code',
-      body: 'Every round, MindCode hides a short number. Your job is to work out what it is.',
+      title: t('onboarding.slide1Title'),
+      body: t('onboarding.slide1Body'),
       render: () => <CodeSlots value="" length={2} />,
     },
     {
-      title: 'Every guess tells you something',
-      body: 'A digit in the right place scores +1. The right digit in the wrong place scores −1. A digit that is not in the code scores nothing.',
+      title: t('onboarding.slide2Title'),
+      body: t('onboarding.slide2Body'),
       render: () => (
         <View style={{ width: '100%' }}>
           <GuessRow index={0} guess="56" display="0" score={0} />
@@ -41,8 +43,8 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
       ),
     },
     {
-      title: 'Five minutes a day',
-      body: 'One Daily Challenge, the same code for everyone in the world. Play each day to build a streak, earn XP and climb the ranks.',
+      title: t('onboarding.slide3Title'),
+      body: t('onboarding.slide3Body'),
       render: () => (
         <Text style={{ fontSize: 52 }} center>
           🔥
@@ -67,10 +69,10 @@ export function OnboardingScreen({ onDone }: { onDone: () => void }) {
     <Screen
       footer={
         <View>
-          <Button label={isLast ? 'Start playing' : 'Next'} onPress={advance} />
+          <Button label={isLast ? t('onboarding.start') : t('common.next')} onPress={advance} />
           {!isLast ? (
             <Button
-              label="Skip"
+              label={t('common.skip')}
               variant="ghost"
               onPress={() => {
                 void markOnboarded();

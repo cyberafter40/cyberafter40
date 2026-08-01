@@ -82,10 +82,10 @@ export const memoryGridEngine: GameEngine<
 
   validateMove(state: MemoryGridState, move: MemoryGridMove): MoveValidation {
     if (state.status !== 'in_progress') {
-      return invalid('game_over', 'This game has already finished.');
+      return invalid('game_over', 'numberLogic.errorGameOver');
     }
     if (!isValidTile(move?.tile, state.config)) {
-      return invalid('out_of_range', 'That tile is not on the grid.');
+      return invalid('out_of_range', 'memoryGrid.errorOutOfRange');
     }
     return VALID;
   },

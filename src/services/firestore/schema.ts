@@ -51,7 +51,8 @@ export interface PublicProfileDoc {
   countryCode: string | null;
   level: number;
   xp: number;
-  title: string;
+  /** Translation key for the rank name; the client renders it. */
+  titleKey: string;
   currentStreak: number;
   badgeCount: number;
   updatedAt: number;

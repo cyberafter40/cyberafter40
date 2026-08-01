@@ -13,24 +13,24 @@ import type { MemoryGridConfig } from './generator';
 const variants: GameVariant<MemoryGridConfig>[] = [
   {
     id: 'short',
-    title: 'Four Tiles',
-    subtitle: 'A gentle warm-up. 3×3 grid.',
+    titleKey: 'variants.memoryShort',
+    subtitleKey: 'variants.memoryShortSubtitle',
     difficulty: 1,
     unlocksAtLevel: 0,
     config: { size: 3, sequenceLength: 4, maxMistakes: 2, revealMs: 620 },
   },
   {
     id: 'standard',
-    title: 'Six Tiles',
-    subtitle: 'Past the span most people hold. 3×3 grid.',
+    titleKey: 'variants.memoryStandard',
+    subtitleKey: 'variants.memoryStandardSubtitle',
     difficulty: 3,
     unlocksAtLevel: 0,
     config: { size: 3, sequenceLength: 6, maxMistakes: 2, revealMs: 560 },
   },
   {
     id: 'long',
-    title: 'Nine Tiles',
-    subtitle: 'Serious recall. 4×4 grid.',
+    titleKey: 'variants.memoryLong',
+    subtitleKey: 'variants.memoryLongSubtitle',
     difficulty: 5,
     unlocksAtLevel: 5,
     config: { size: 4, sequenceLength: 9, maxMistakes: 3, revealMs: 500 },
@@ -44,8 +44,8 @@ export const memoryGridModule: GameModule<
   MemoryGridConfig
 > = {
   id: 'memory-grid',
-  title: 'Memory Grid',
-  tagline: 'Hold the pattern, then rebuild it.',
+  titleKey: 'modules.memoryGrid',
+  taglineKey: 'modules.memoryGridTagline',
   category: 'memory',
   icon: '🧠',
   status: 'live',

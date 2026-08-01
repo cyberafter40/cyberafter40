@@ -42,7 +42,7 @@ export type AnalyticsEvent =
       };
     }
   | { name: 'daily_challenge_complete'; params: { challengeId: string; score: number; status: string } }
-  | { name: 'level_up'; params: { level: number; title: string } }
+  | { name: 'level_up'; params: { level: number; rank: string } }
   | { name: 'badge_unlocked'; params: { badgeId: string } }
   | { name: 'streak_extended'; params: { current: number } }
   | { name: 'streak_broken'; params: { previous: number } }

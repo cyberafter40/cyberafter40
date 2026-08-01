@@ -11,7 +11,8 @@ export interface KeypadProps {
   canSubmit: boolean;
   canDelete: boolean;
   disabled?: boolean;
-  submitLabel?: string;
+  /** Already-translated label for the submit key. */
+  submitLabel: string;
   /** Digits already ruled out — dimmed as a memory aid, still tappable. */
   eliminated?: ReadonlySet<string>;
 }
@@ -36,7 +37,7 @@ export function Keypad({
   canSubmit,
   canDelete,
   disabled = false,
-  submitLabel = 'Check',
+  submitLabel,
   eliminated,
 }: KeypadProps) {
   const theme = useTheme();

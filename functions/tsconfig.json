@@ -29,6 +29,8 @@
   "include": [
     "src/**/*.ts",
     "../src/engine/**/*.ts",
+    "../src/i18n/en.ts",
+    "../src/i18n/types.ts",
     "../src/scoring/**/*.ts",
     "../src/progress/**/*.ts",
     "../src/games/**/*.ts",
