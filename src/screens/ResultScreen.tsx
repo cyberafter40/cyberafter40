@@ -194,7 +194,12 @@ export function ResultScreen({ route, navigation }: Props) {
         ) : null,
       )}
 
-      {!params.synced ? (
+      {params.rejection ? (
+        <Text variant="caption" tone="negative" center style={{ marginTop: theme.spacing.lg }}>
+          This game could not be recorded, so it will not count towards your
+          progress. Nothing to retry — sorry.
+        </Text>
+      ) : !params.synced ? (
         <Text variant="caption" tone="faint" center style={{ marginTop: theme.spacing.lg }}>
           Saved on this device — it will sync when you are back online.
         </Text>

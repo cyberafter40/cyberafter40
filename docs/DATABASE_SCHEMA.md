@@ -193,6 +193,22 @@ Declared in [`firestore.indexes.json`](../firestore.indexes.json).
 Single-field indexes are disabled for `seed`, `solution` and `moveLog` — nothing
 queries them and they are the largest fields in the collection.
 
+**One field override is not an optimisation but a correctness requirement.**
+`deleteAccount` finds a player's leaderboard rows with a *collection-group*
+query:
+
+```ts
+db.collectionGroup('entries').where('uid', '==', uid)
+```
+
+Firestore's automatic single-field indexes are **collection-scoped only**, so a
+collection-group query on `uid` needs `COLLECTION_GROUP` scope declared
+explicitly. Without it the query fails with `FAILED_PRECONDITION` and account
+deletion breaks — which App Store Review Guideline 5.1.1(v) makes a shipping
+requirement. The Firestore emulator does not enforce index requirements, so the
+emulator test suite passes either way; this one has to be caught by reading, and
+verified against a real project.
+
 ---
 
 ## Access control

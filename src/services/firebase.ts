@@ -10,11 +10,13 @@ import {
   type Auth,
 } from 'firebase/auth';
 import {
+  connectFirestoreEmulator,
   getFirestore,
   initializeFirestore,
   type Firestore,
 } from 'firebase/firestore';
-import { getFunctions, type Functions } from 'firebase/functions';
+import { connectAuthEmulator } from 'firebase/auth';
+import { connectFunctionsEmulator, getFunctions, type Functions } from 'firebase/functions';
 
 /**
  * Firebase bootstrap.
@@ -22,7 +24,22 @@ import { getFunctions, type Functions } from 'firebase/functions';
  * Initialisation is lazy and idempotent so Fast Refresh does not create a
  * second app instance, and so unit tests can import domain modules without ever
  * touching the network.
+ *
+ * Setting `EXPO_PUBLIC_FIREBASE_EMULATOR_HOST` points auth, Firestore and
+ * callable functions at the local emulator suite instead of a real project.
+ * That is what local development should use — and it is what makes a real
+ * end-to-end test possible, since the app then exercises the actual security
+ * rules and the actual `submitGameResult` transaction rather than a mock.
  */
+
+/** Host running the emulator suite, or null for a real Firebase project. */
+const EMULATOR_HOST = process.env.EXPO_PUBLIC_FIREBASE_EMULATOR_HOST || null;
+
+const EMULATOR_PORTS = { auth: 9099, firestore: 8080, functions: 5001 } as const;
+
+export function isUsingEmulators(): boolean {
+  return EMULATOR_HOST !== null;
+}
 
 export interface FirebaseConfig {
   apiKey: string;
@@ -74,6 +91,12 @@ export function getFirebaseAuth(): Auth {
     // Already initialised (Fast Refresh, or a second import path).
     authInstance = getAuth(instance);
   }
+
+  if (EMULATOR_HOST) {
+    connectAuthEmulator(authInstance, `http://${EMULATOR_HOST}:${EMULATOR_PORTS.auth}`, {
+      disableWarnings: true,
+    });
+  }
   return authInstance;
 }
 
@@ -89,12 +112,19 @@ export function getDb(): Firestore {
   } catch {
     dbInstance = getFirestore(instance);
   }
+
+  if (EMULATOR_HOST) {
+    connectFirestoreEmulator(dbInstance, EMULATOR_HOST, EMULATOR_PORTS.firestore);
+  }
   return dbInstance;
 }
 
 export function getFirebaseFunctions(): Functions {
   if (!functionsInstance) {
     functionsInstance = getFunctions(getFirebaseApp());
+    if (EMULATOR_HOST) {
+      connectFunctionsEmulator(functionsInstance, EMULATOR_HOST, EMULATOR_PORTS.functions);
+    }
   }
   return functionsInstance;
 }

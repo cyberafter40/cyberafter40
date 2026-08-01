@@ -18,6 +18,7 @@ export function StatTile({ label, value, hint, accent = false, style }: StatTile
 
   return (
     <View
+      accessible
       accessibilityRole="summary"
       accessibilityLabel={`${label}: ${value}${hint ? `, ${hint}` : ''}`}
       style={[

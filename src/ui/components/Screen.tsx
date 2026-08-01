@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../ThemeProvider';
 
 export interface ScreenProps {
-  children: ReactNode;
+  /** Optional: a bare frame is a valid loading placeholder. */
+  children?: ReactNode;
   /** Wrap content in a ScrollView. Off for the game board, which must not scroll. */
   scroll?: boolean;
   /** Remove default horizontal padding — for edge-to-edge lists. */

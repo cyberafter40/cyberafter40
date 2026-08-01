@@ -30,10 +30,12 @@ Working out which is the game.
 | --- | --- |
 | **App** | React Native (Expo, TypeScript) |
 | **Backend** | Firebase — Auth, Firestore, Cloud Functions, Analytics |
-| **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic (2/3/4 digits) |
-| **Progression** | XP, 50 levels with titles, 19 badges, daily streaks |
+| **Games** | Number Logic (2/3/4 digits) · Memory Grid (recall a tile sequence) |
+| **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic free play |
+| **Progression** | XP, 50 levels with titles, 21 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 77 unit tests over the engine, scoring and progression layers |
+| **Tests** | 255 tests — 102 domain · 55 UI · 31 result validation · 60 emulator (rules + functions) · 7 end-to-end (real app, real backend) |
+| **CI** | GitHub Actions — typecheck, lint and all five suites on every push |
 
 ### Documentation
 
@@ -59,7 +61,8 @@ fail on launch — see [`docs/DEPLOYMENT_APPSTORE.md`](docs/DEPLOYMENT_APPSTORE.
 for the ten-minute project setup.
 
 ```bash
-npm test          # unit tests (no emulator or network needed)
+npm test          # 102 domain tests — no emulator or network needed
+npm run test:ui   # 55 UI tests — real components, real engines, mocked network
 npm run typecheck # full app type check
 npm run lint
 ```
@@ -68,7 +71,24 @@ Backend:
 
 ```bash
 cd functions && npm install && npm run build
+npm test                # 31 result-validation tests, no infrastructure needed
+npm run test:emulator   # 60 tests: security rules + all three functions
+                        # (starts and stops the emulators itself; needs Java)
 firebase emulators:start                       # local Auth + Firestore + Functions
+```
+
+End to end — the real bundled app in a browser, against the real emulator suite:
+
+```bash
+npm run test:e2e        # builds, starts Firestore/Auth/Functions, drives Chromium
+```
+
+Point the app at your local emulators during development the same way, by
+setting `EXPO_PUBLIC_FIREBASE_EMULATOR_HOST=127.0.0.1` before `npx expo start`.
+
+From the repo root, `npm run test:all` runs every suite that needs no emulator.
+
+```bash
 npm run deploy:rules && npm run deploy:functions
 ```
 
@@ -82,9 +102,11 @@ with one game in it. Three pure, dependency-free engines do the work — a
 **User Progress Engine** (XP, levels, streaks, badges) — and none of them knows
 what Bulls & Cows is. The `+1/−1` rule itself is a swappable
 [`FeedbackPolicy`](src/games/numberLogic/policies.ts), not a hardcoded branch.
-Adding memory, pattern, reaction or reasoning games means writing a `GameEngine`
-and registering it; scoring, progression, statistics, persistence, analytics and
-navigation all keep working untouched.
+Adding a game means writing a `GameEngine` and registering it; progression,
+statistics, persistence, analytics and navigation keep working untouched. That
+is not a hope — **Memory Grid is the second engine**, in a different category
+with a different scoring shape, and it cost five new files plus four lines in
+two existing ones. `__tests__/platform.test.ts` keeps the claim honest.
 
 Those same pure modules are compiled into the Cloud Functions, so the server
 replays every submitted game with byte-identical logic instead of a
@@ -95,7 +117,7 @@ src/
   engine/     GameEngine contract, seeded RNG, registry, session runtime
   scoring/    composable scoring rules and profiles
   progress/   XP curve, levels, badges, streaks, the progress reducer
-  games/      numberLogic/ (live) + roadmap module stubs
+  games/      numberLogic/ + memoryGrid/ (both live) + roadmap stubs
   daily/      deterministic Daily Challenge derivation (shared with backend)
   services/   Firebase: auth, Firestore repositories, analytics, offline queue
   state/      React contexts and hooks

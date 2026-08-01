@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "__tests__/**/*.ts",
+    "../src/engine/**/*.ts",
+    "../src/scoring/**/*.ts",
+    "../src/progress/**/*.ts",
+    "../src/games/**/*.ts",
+    "../src/daily/**/*.ts",
+    "../src/utils/date.ts",
+    "../src/utils/names.ts"
+  ],
+  "exclude": ["../src/games/**/*.tsx", "lib", "node_modules"]
+}

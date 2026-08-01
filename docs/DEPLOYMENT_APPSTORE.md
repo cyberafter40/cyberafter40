@@ -62,6 +62,25 @@ Local development against emulators:
 firebase emulators:start           # Auth 9099 · Firestore 8080 · Functions 5001 · UI 4000
 ```
 
+Before deploying rules, run the suite that checks them. It starts and stops the
+Firestore emulator itself, so the only prerequisite is a JDK:
+
+```bash
+npm --prefix functions run test:emulator
+```
+
+60 tests covering every allow/deny path in `firestore.rules` plus all three
+Cloud Functions, and `npm run test:e2e` drives the real app against the whole
+emulator suite. Treat a failure here as a release blocker — a permissive rule
+is not visible in the app until someone exploits it.
+
+One caveat worth knowing: **the emulator does not enforce index requirements.**
+`deleteAccount` sweeps leaderboards with a collection-group query on
+`entries.uid`, which needs the explicit `COLLECTION_GROUP` override in
+`firestore.indexes.json`; without it the query fails only against a real
+project. Deploy indexes before functions, and exercise account deletion once on
+staging.
+
 ## 3. Native analytics (optional but recommended)
 
 The Firebase JS SDK has no React Native Analytics implementation. The app ships
@@ -190,8 +209,9 @@ story both change.
 upload.
 
 **Guideline 4.2 — minimum functionality.** Puzzle games get scrutinised for
-being "too simple". Point at the depth in the review notes: three difficulty
-variants, a global daily challenge, 50 levels, 19 badges, three leaderboards.
+being "too simple". Point at the depth in the review notes: two distinct
+training modules with six difficulty variants between them, a global daily
+challenge, 50 levels, 21 badges, three leaderboards.
 
 **Review notes.** Reviewers must be able to see everything without a barrier.
 Anonymous sign-in means they can, but say so explicitly:

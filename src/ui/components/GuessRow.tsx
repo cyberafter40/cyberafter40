@@ -88,6 +88,7 @@ export function GuessRow({
       <Animated.View
         entering={FadeInDown.duration(240).springify().damping(18)}
         style={rowStyle}
+        accessible
         accessibilityRole="text"
         accessibilityLabel={accessibilityLabel}
       >
@@ -97,7 +98,12 @@ export function GuessRow({
   }
 
   return (
-    <View style={rowStyle} accessibilityRole="text" accessibilityLabel={accessibilityLabel}>
+    <View
+      style={rowStyle}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={accessibilityLabel}
+    >
       {content}
     </View>
   );

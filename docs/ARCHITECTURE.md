@@ -13,9 +13,28 @@ Functions are all written against normalised shapes — `GameOutcome`,
 `ScoreBreakdown`, `ProgressEvent` — that a memory game or a reaction test will
 produce just as naturally as the number puzzle does.
 
-The test of that claim is concrete: adding Memory Grid should touch exactly two
-files that already exist (`src/games/index.ts` and `src/games/renderers.tsx`)
-and nothing else. See [GAME_ENGINE_GUIDE.md](GAME_ENGINE_GUIDE.md).
+That claim has now been tested rather than asserted: **Memory Grid shipped as a
+second engine**, in a different category, with a different scoring shape. What
+it cost, measured:
+
+| | |
+| --- | --- |
+| New files | 5, all under `src/games/memoryGrid/` |
+| Registry edits | 2 lines in `src/games/index.ts`, 2 in `src/games/renderers.tsx` |
+| Scoring | 1 new `ScoringProfile` — composed from existing rules, no new rule code |
+| Progression, statistics, persistence, security rules, Cloud Functions, navigation | **unchanged** |
+| Backend | validated the new game with no edits at all — engines resolve through the registry |
+
+One thing the claim got wrong, and it is worth recording: `HomeScreen` had
+`'number-logic'` hardcoded in its free-play section. Adding a second game
+exposed it immediately. It is now driven by `listLiveGameModules()`, so a third
+module appears there with no edit — but the leak was real, and it is the kind
+only a second implementation finds.
+
+`__tests__/platform.test.ts` exists to keep this honest: it drives a memory game
+through the unmodified scoring and progress engines and asserts the results are
+meaningful, not merely non-crashing. See
+[GAME_ENGINE_GUIDE.md](GAME_ENGINE_GUIDE.md) for the procedure.
 
 ---
 
@@ -186,6 +205,32 @@ What the backend enforces, in `functions/src/replay.ts`:
 | Timestamps not in the future, not older than 7 days | clock manipulation, stale replays |
 | `sessionId` uniqueness inside the transaction | double-counting a daily attempt |
 | Firestore rules deny all client writes to progression | writing XP directly |
+
+Every row is covered by tests, across three suites:
+
+| Suite | Covers | Needs |
+| --- | --- | --- |
+| `functions/__tests__/replay.test.ts` | forged games — seeds, moves, timings, payload shape | nothing |
+| `functions/__tests__/emulator/submitGameResult.test.ts` | the write transaction: idempotency, the six documents, server-side scoring | Firestore emulator |
+| `functions/__tests__/emulator/firestore.rules.test.ts` | every allow/deny path in `firestore.rules` | Firestore emulator |
+| `functions/__tests__/emulator/deleteAccount.test.ts` | full erasure across every collection, and the auth record | Firestore + Auth emulators |
+| `functions/__tests__/emulator/provisionDailyChallenges.test.ts` | create-only provisioning; never rewrites a live puzzle | Firestore emulator |
+| `__tests__/ui/boards.test.tsx` | the real boards driven by the real engines — keypad wiring, reveal timing, hand-off | nothing |
+| `e2e/daily-challenge.spec.ts` | the real bundled app in a browser, playing a real game against real auth, rules and `submitGameResult` | Firebase emulators + Chromium |
+
+None of them use fixtures — each case drives a real `GameSession` and then
+tampers with the result the way an attacker would.
+
+Two properties are worth stating because they are easy to get wrong:
+
+- **A forged `outcome` or `solution` is not rejected, it is overwritten.** The
+  replayed truth replaces whatever the client sent, so no client-supplied field
+  reaches the scorer at all. That is stronger than rejection, which would leave
+  a version-skew failure mode.
+- **One attempt per day is enforced by the transaction, not by the UI.** Daily
+  session ids are deterministic (`{uid}_{YYYY-MM-DD}`), so a second attempt
+  collides with an existing document inside the transaction and returns
+  `duplicate` without touching XP, statistics or any leaderboard.
 
 What it does **not** stop: a modified client that plays the real game correctly
 but has a solver choose its guesses. The puzzle has to exist on the device for

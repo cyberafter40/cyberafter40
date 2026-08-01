@@ -23,6 +23,7 @@ export function BadgeTile({ badge, unlocked, unlockedAt }: BadgeTileProps) {
 
   return (
     <View
+      accessible
       accessibilityRole="summary"
       accessibilityLabel={
         unlocked

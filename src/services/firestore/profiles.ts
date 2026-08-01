@@ -60,11 +60,14 @@ export function observeProfile(
 }
 
 export async function updateSettings(uid: string, settings: Partial<UserSettings>): Promise<void> {
-  const patch: Record<string, unknown> = { updatedAt: Date.now() };
-  for (const [key, value] of Object.entries(settings)) {
-    patch[`settings.${key}`] = value;
-  }
-  await updateDoc(profileRef(uid), patch);
+  // `merge: true` deep-merges maps, so a partial settings object updates only
+  // the keys it names and leaves the rest intact. That is the same semantics
+  // dotted field paths gave us, without the untypeable dynamic-key patch.
+  await setDoc(
+    profileRef(uid),
+    { settings, updatedAt: Date.now() },
+    { merge: true },
+  );
 }
 
 export async function updateIdentity(

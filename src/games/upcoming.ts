@@ -68,16 +68,6 @@ function roadmapModule(input: {
   };
 }
 
-export const memoryModule = roadmapModule({
-  id: 'memory-grid',
-  title: 'Memory Grid',
-  tagline: 'Hold the pattern, then rebuild it.',
-  category: 'memory',
-  icon: '🧠',
-  variantTitle: 'Grid Recall',
-  variantSubtitle: 'Sequences that grow one tile at a time.',
-});
-
 export const patternModule = roadmapModule({
   id: 'pattern-sense',
   title: 'Pattern Sense',
@@ -109,7 +99,6 @@ export const reasoningModule = roadmapModule({
 });
 
 export const upcomingModules: GameModule[] = [
-  memoryModule,
   patternModule,
   reactionModule,
   reasoningModule,
