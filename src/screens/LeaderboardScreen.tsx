@@ -135,6 +135,7 @@ function Row({
 
   return (
     <View
+      accessible
       accessibilityRole="text"
       accessibilityLabel={`${hideRank ? '' : `Rank ${row.rank}, `}${row.displayName}, ${row.score} ${PERIOD_METRIC_LABELS[period]}`}
       style={{

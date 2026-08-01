@@ -34,7 +34,8 @@ Working out which is the game.
 | **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic free play |
 | **Progression** | XP, 50 levels with titles, 21 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 190 tests — 102 domain, 31 server-side result validation, 57 against the Firebase emulators (security rules and all three Cloud Functions) |
+| **Tests** | 247 tests — 102 domain · 55 UI (components, boards, screens) · 31 result validation · 59 against the Firebase emulators |
+| **CI** | GitHub Actions — typecheck, lint and all four suites on every push |
 
 ### Documentation
 
@@ -61,6 +62,7 @@ for the ten-minute project setup.
 
 ```bash
 npm test          # 102 domain tests — no emulator or network needed
+npm run test:ui   # 55 UI tests — real components, real engines, mocked network
 npm run typecheck # full app type check
 npm run lint
 ```
@@ -70,12 +72,12 @@ Backend:
 ```bash
 cd functions && npm install && npm run build
 npm test                # 31 result-validation tests, no infrastructure needed
-npm run test:emulator   # 57 tests: security rules + all three functions
+npm run test:emulator   # 59 tests: security rules + all three functions
                         # (starts and stops the emulators itself; needs Java)
 firebase emulators:start                       # local Auth + Firestore + Functions
 ```
 
-From the repo root, `npm run test:all` runs both infrastructure-free suites.
+From the repo root, `npm run test:all` runs every suite that needs no emulator.
 
 ```bash
 npm run deploy:rules && npm run deploy:functions

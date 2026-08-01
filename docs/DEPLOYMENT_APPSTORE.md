@@ -69,7 +69,7 @@ Firestore emulator itself, so the only prerequisite is a JDK:
 npm --prefix functions run test:emulator
 ```
 
-57 tests covering every allow/deny path in `firestore.rules` plus all three
+59 tests covering every allow/deny path in `firestore.rules` plus all three
 Cloud Functions. Treat a failure here as a release blocker — a permissive rule
 is not visible in the app until someone exploits it.
 

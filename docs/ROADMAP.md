@@ -88,7 +88,7 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**Index requirements are unverified.** 190 tests now cover the domain layers,
+**Index requirements are unverified.** 247 tests now cover the domain layers,
 server-side replay, `firestore.rules` and all three Cloud Functions — but the
 Firestore emulator does not enforce indexes, so no test can prove a query will
 work against a real project. `deleteAccount`'s collection-group sweep over
@@ -97,12 +97,19 @@ work against a real project. `deleteAccount`'s collection-group sweep over
 than by testing. Deploy indexes before functions and exercise account deletion
 once on staging.
 
-**No end-to-end test on a device.** Everything below the React layer is tested;
-nothing above it is. No component tests, no Detox/Maestro run, no screenshot
-regression. This is now the largest gap by some distance — and Memory Grid
-widened it, because `MemoryGridBoard` carries real timing logic (the reveal
-sequence) that no test touches. The first bug that reaches a user will probably
-be a rendering or timing one, not a scoring one.
+**No test on a real device.** The React layer now has 55 tests — components,
+both play surfaces driven by real engines, and five screens — plus CI that runs
+every suite. What is still missing is the layer above that: no Detox/Maestro
+run, no screenshot regression, and nothing has been launched on a simulator or
+handset in this repo's history. Gesture handling, keyboard avoidance, safe-area
+behaviour on a notched device and real animation timing are all unverified.
+
+Adding the UI suite paid for itself immediately — it found that every custom
+composite (`ProgressBar`, `StatTile`, `GuessRow`, `CodeSlots`, `BadgeTile`, the
+leaderboard row) declared an accessibility label but never set `accessible`, so
+screen readers announced the child fragments instead of the composed label. The
+first full `tsc` run over the app, made possible by the same work, found two
+type errors that would have broken a release build.
 
 **How to Play only covers Number Logic.** `HowToPlayScreen` is the ±1 explainer
 and is hardcoded to that module. Memory Grid teaches itself on the board

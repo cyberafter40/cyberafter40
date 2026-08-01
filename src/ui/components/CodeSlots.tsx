@@ -57,6 +57,7 @@ export function CodeSlots({
   return (
     <Animated.View
       style={[styles.row, animatedStyle]}
+      accessible
       accessibilityRole="text"
       accessibilityLabel={
         value.length === 0

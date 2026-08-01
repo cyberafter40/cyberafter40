@@ -6,8 +6,14 @@ module.exports = {
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
-  plugins: ['@typescript-eslint'],
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+  plugins: ['@typescript-eslint', 'react-hooks'],
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    // Hook rules catch stale-closure bugs — the exact class this project has
+    // already been bitten by once (see useGameSession).
+    'plugin:react-hooks/recommended',
+  ],
   env: { es2022: true, node: true },
   globals: { __DEV__: 'readonly' },
   ignorePatterns: [
@@ -33,9 +39,14 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['__tests__/**/*.ts'],
+      files: ['__tests__/**/*.ts', '__tests__/**/*.tsx', 'functions/__tests__/**/*.ts'],
       env: { jest: true },
-      rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+      rules: {
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        // jest.mock factories are hoisted above imports, so lazy `require`
+        // inside them is the documented pattern, not an oversight.
+        '@typescript-eslint/no-var-requires': 'off',
+      },
     },
   ],
 };

@@ -215,6 +215,7 @@ Every row is covered by tests, across three suites:
 | `functions/__tests__/emulator/firestore.rules.test.ts` | every allow/deny path in `firestore.rules` | Firestore emulator |
 | `functions/__tests__/emulator/deleteAccount.test.ts` | full erasure across every collection, and the auth record | Firestore + Auth emulators |
 | `functions/__tests__/emulator/provisionDailyChallenges.test.ts` | create-only provisioning; never rewrites a live puzzle | Firestore emulator |
+| `__tests__/ui/boards.test.tsx` | the real boards driven by the real engines — keypad wiring, reveal timing, hand-off | nothing |
 
 None of them use fixtures — each case drives a real `GameSession` and then
 tampers with the result the way an attacker would.

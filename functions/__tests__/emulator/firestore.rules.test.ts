@@ -201,15 +201,34 @@ describe('profiles/{uid} — updates', () => {
   });
 
   it('allows the settings edits the app actually makes', async () => {
-    // Mirrors services/firestore/profiles.ts → updateSettings(), which writes
-    // dotted field paths. If rules counted those as distinct affected keys the
+    // Mirrors services/firestore/profiles.ts → updateSettings(), which uses a
+    // merging set. If the rules counted the nested map as an unlisted field the
     // toggle switches in Settings would silently fail in production.
+    await assertSucceeds(
+      setDoc(
+        doc(db(ALICE), 'profiles', ALICE),
+        { settings: { haptics: false, theme: 'light' }, updatedAt: Date.now() },
+        { merge: true },
+      ),
+    );
+  });
+
+  it('allows a dotted-path settings write too, so either style is safe', async () => {
     await assertSucceeds(
       updateDoc(doc(db(ALICE), 'profiles', ALICE), {
         'settings.haptics': false,
-        'settings.theme': 'light',
         updatedAt: Date.now(),
       }),
+    );
+  });
+
+  it('refuses a merging set that smuggles progression alongside settings', async () => {
+    await assertFails(
+      setDoc(
+        doc(db(ALICE), 'profiles', ALICE),
+        { settings: { haptics: false }, xp: 999_999 },
+        { merge: true },
+      ),
     );
   });
 

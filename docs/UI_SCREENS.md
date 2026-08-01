@@ -135,6 +135,24 @@ purpose: it must render even if the theme provider is what failed. A crashed
 render in a daily-habit app is worse than a bug — it breaks the streak the
 player has been protecting.
 
+## Testing
+
+`npm run test:ui` — 55 tests over three files, needing no emulator or network:
+
+- **`components.test.tsx`** — reachability and communication: roles, labels,
+  disabled states, the score pill's sign. Pixel styling is deliberately not
+  asserted; it would break on every design tweak without catching a defect.
+- **`boards.test.tsx`** — the real boards driven by the real `useGameSession`
+  and the real engines. The secret is derived from the seed exactly as the app
+  derives it, so pressing the right keys really does win. This is the only layer
+  that can catch a keypad wired to the wrong handler, a board that never calls
+  `onFinished`, or a reveal animation that leaves the grid untappable.
+- **`screens.test.tsx`** — branch coverage per screen: daily played vs unplayed,
+  locked vs unlocked variants, win vs loss, empty vs populated leaderboard.
+
+Only the data supply is mocked (Firestore, auth, the profile). Theming, level
+and streak derivation, statistics and the engines all run for real.
+
 ## Accessibility
 
 - Every interactive element has an `accessibilityRole` and label; the code slots
@@ -144,3 +162,7 @@ player has been protecting.
   win/loss states use glyphs as well as hue
 - A reduced-motion setting is exposed in Settings
 - Text uses relative sizing and wraps rather than truncating
+- Every composite that carries its own label sets `accessible`, so a screen
+  reader announces the composed sentence rather than each child fragment. The
+  UI suite enforces this by querying through `getByRole`, which only matches
+  real accessibility elements — a label without the flag fails the test.
