@@ -194,6 +194,8 @@ Every row is covered by tests, across three suites:
 | `functions/__tests__/replay.test.ts` | forged games — seeds, moves, timings, payload shape | nothing |
 | `functions/__tests__/emulator/submitGameResult.test.ts` | the write transaction: idempotency, the six documents, server-side scoring | Firestore emulator |
 | `functions/__tests__/emulator/firestore.rules.test.ts` | every allow/deny path in `firestore.rules` | Firestore emulator |
+| `functions/__tests__/emulator/deleteAccount.test.ts` | full erasure across every collection, and the auth record | Firestore + Auth emulators |
+| `functions/__tests__/emulator/provisionDailyChallenges.test.ts` | create-only provisioning; never rewrites a live puzzle | Firestore emulator |
 
 None of them use fixtures — each case drives a real `GameSession` and then
 tampers with the result the way an attacker would.

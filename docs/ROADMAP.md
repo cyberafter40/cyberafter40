@@ -84,15 +84,17 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**The Auth emulator path is untested.** 148 tests now cover the domain layers,
-server-side replay, `firestore.rules` and the `submitGameResult` transaction.
-The one backend path still verified only by hand is `deleteAccount`, because it
-calls `getAuth().deleteUser()` and so needs the Auth emulator alongside
-Firestore. Given App Store Guideline 5.1.1(v) makes deletion a shipping
-requirement, it deserves a test that asserts the profile, sessions, daily
-entries, public profile and every leaderboard entry are actually gone.
+**Index requirements are unverified.** 160 tests now cover the domain layers,
+server-side replay, `firestore.rules` and all three Cloud Functions — but the
+Firestore emulator does not enforce indexes, so no test can prove a query will
+work against a real project. `deleteAccount`'s collection-group sweep over
+`entries.uid` needs the `COLLECTION_GROUP` override now declared in
+`firestore.indexes.json`; it was missing until it was found by reading rather
+than by testing. Deploy indexes before functions and exercise account deletion
+once on staging.
 
-**The scheduled function is untested.** `provisionDailyChallenges` is
-create-only and idempotent by construction, but nothing proves it — in
-particular that a second run does not overwrite a challenge players are
-mid-way through.
+**No end-to-end test on a device.** Everything below the React layer is tested;
+nothing above it is. No component tests, no Detox/Maestro run, no screenshot
+regression. The screens are simple enough that this is a reasonable v1 trade,
+but the first bug that reaches a user will probably be a rendering or navigation
+one, not a scoring one.

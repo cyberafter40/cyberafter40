@@ -69,9 +69,16 @@ Firestore emulator itself, so the only prerequisite is a JDK:
 npm --prefix functions run test:emulator
 ```
 
-44 tests covering every allow/deny path in `firestore.rules` plus the
-`submitGameResult` write transaction. Treat a failure here as a release
-blocker — a permissive rule is not visible in the app until someone exploits it.
+56 tests covering every allow/deny path in `firestore.rules` plus all three
+Cloud Functions. Treat a failure here as a release blocker — a permissive rule
+is not visible in the app until someone exploits it.
+
+One caveat worth knowing: **the emulator does not enforce index requirements.**
+`deleteAccount` sweeps leaderboards with a collection-group query on
+`entries.uid`, which needs the explicit `COLLECTION_GROUP` override in
+`firestore.indexes.json`; without it the query fails only against a real
+project. Deploy indexes before functions, and exercise account deletion once on
+staging.
 
 ## 3. Native analytics (optional but recommended)
 

@@ -10,7 +10,7 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "test": "jest",
-    "test:emulator": "firebase emulators:exec --only firestore --project mindcode-rules-test \"jest --config jest.emulator.config.js\"",
+    "test:emulator": "firebase emulators:exec --only firestore,auth --project mindcode-rules-test \"jest --config jest.emulator.config.js\"",
     "serve": "npm run build && firebase emulators:start --only functions,firestore,auth",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
