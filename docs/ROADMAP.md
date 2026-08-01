@@ -84,7 +84,14 @@ ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**No integration tests against the emulator.** The 77 unit tests cover the pure
-domain layers thoroughly, but the Cloud Functions and security rules are only
-verified by hand. `@firebase/rules-unit-testing` against the emulator suite is
-the obvious next test investment.
+**Security rules and the write transaction are untested.** The 104 tests cover
+the pure domain layers and the whole server-side validation path
+(`functions/__tests__/replay.test.ts`), but two things are still only verified
+by hand: `firestore.rules`, and the transaction body of `submitGameResult` —
+idempotency on duplicate session ids, and the six documents it writes.
+
+Both need the emulator: `@firebase/rules-unit-testing` for the rules, and
+`firebase-functions-test` against the Firestore emulator for the transaction.
+That is the next test investment, and it is the one that would catch a
+regression in the rule that stops a client from bootstrapping itself onto the
+leaderboard.

@@ -9,6 +9,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",
+    "test:functions": "npm --prefix functions test",
+    "test:all": "npm test && npm run test:functions",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
@@ -54,7 +56,11 @@
     "preset": "ts-jest",
     "testEnvironment": "node",
     "testMatch": [
-      "**/__tests__/**/*.test.ts"
+      "<rootDir>/__tests__/**/*.test.ts"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/functions/"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1"

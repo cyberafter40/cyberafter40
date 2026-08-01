@@ -226,6 +226,11 @@ it('round-trips through JSON unchanged', …)
 
 Run with `npm test` — no emulator, no network, no React.
 
+Your engine is also picked up automatically by the backend suite
+(`npm run test:functions`), because `validateAndReplay` resolves engines through
+the same registry. If your engine is not deterministic, that suite is where it
+will show up.
+
 ---
 
 ## Roadmap modules already registered

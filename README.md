@@ -33,7 +33,7 @@ Working out which is the game.
 | **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic (2/3/4 digits) |
 | **Progression** | XP, 50 levels with titles, 19 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 77 unit tests over the engine, scoring and progression layers |
+| **Tests** | 104 tests — 77 over the engine, scoring and progression layers, 27 over server-side result validation |
 
 ### Documentation
 
@@ -59,7 +59,7 @@ fail on launch — see [`docs/DEPLOYMENT_APPSTORE.md`](docs/DEPLOYMENT_APPSTORE.
 for the ten-minute project setup.
 
 ```bash
-npm test          # unit tests (no emulator or network needed)
+npm test          # 77 domain tests — no emulator or network needed
 npm run typecheck # full app type check
 npm run lint
 ```
@@ -68,7 +68,13 @@ Backend:
 
 ```bash
 cd functions && npm install && npm run build
+npm test                                       # 27 result-validation tests
 firebase emulators:start                       # local Auth + Firestore + Functions
+```
+
+From the repo root, `npm run test:all` runs both suites.
+
+```bash
 npm run deploy:rules && npm run deploy:functions
 ```
 

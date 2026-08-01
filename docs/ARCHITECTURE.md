@@ -187,6 +187,13 @@ What the backend enforces, in `functions/src/replay.ts`:
 | `sessionId` uniqueness inside the transaction | double-counting a daily attempt |
 | Firestore rules deny all client writes to progression | writing XP directly |
 
+Every row above except the last two is covered by
+`functions/__tests__/replay.test.ts`, which does not use fixtures: each case
+drives a real `GameSession` and then tampers with the payload the way an
+attacker would. The important property it pins down is that a forged
+`outcome` or `solution` is *not rejected* — it is silently overwritten by the
+replayed truth, so no client-supplied field can ever reach the scorer.
+
 What it does **not** stop: a modified client that plays the real game correctly
 but has a solver choose its guesses. The puzzle has to exist on the device for
 the game to work offline, so the secret is recoverable by anyone determined
