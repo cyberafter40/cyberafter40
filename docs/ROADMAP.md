@@ -83,12 +83,17 @@ façade is in place and the adapter is ten lines
 **Placeholder artwork.** `assets/` holds generated geometric placeholders.
 Replace before submission — Apple rejects placeholder icons.
 
+**The offline queue is only lightly exercised.** `flushPendingResults` is
+covered by unit tests, but no suite simulates losing the network mid-game and
+recovering. The end-to-end harness could do it (Playwright can go offline);
+until it does, the retry path is the least-proven code in the app.
+
 **Weekly leaderboard XP is incremented, not recomputed.** If a submission is
 ever retried after a partial transaction failure the weekly total could drift.
 Firestore transactions make this unlikely; a weekly reconciliation job would
 make it impossible.
 
-**Index requirements are unverified.** 247 tests now cover the domain layers,
+**Index requirements are unverified.** 255 tests now cover the domain layers,
 server-side replay, `firestore.rules` and all three Cloud Functions — but the
 Firestore emulator does not enforce indexes, so no test can prove a query will
 work against a real project. `deleteAccount`'s collection-group sweep over
@@ -97,19 +102,42 @@ work against a real project. `deleteAccount`'s collection-group sweep over
 than by testing. Deploy indexes before functions and exercise account deletion
 once on staging.
 
-**No test on a real device.** The React layer now has 55 tests — components,
-both play surfaces driven by real engines, and five screens — plus CI that runs
-every suite. What is still missing is the layer above that: no Detox/Maestro
-run, no screenshot regression, and nothing has been launched on a simulator or
-handset in this repo's history. Gesture handling, keyboard avoidance, safe-area
-behaviour on a notched device and real animation timing are all unverified.
+**Still no test on a real device.** The app now genuinely runs end to end —
+`npm run test:e2e` bundles it, starts Firestore, Auth and Functions, and drives
+a browser through a full Daily Challenge against the real backend. What that
+does *not* cover is the native layer: no Detox/Maestro run, no simulator or
+handset launch, no screenshot regression. Touch gestures, keyboard avoidance,
+safe-area behaviour on a notched device, haptics and real (non-mocked)
+Reanimated timing remain unverified. The web build exercises the same React
+tree, so logic and wiring are covered; platform behaviour is not.
 
-Adding the UI suite paid for itself immediately — it found that every custom
-composite (`ProgressBar`, `StatTile`, `GuessRow`, `CodeSlots`, `BadgeTile`, the
-leaderboard row) declared an accessibility label but never set `accessible`, so
-screen readers announced the child fragments instead of the composed label. The
-first full `tsc` run over the app, made possible by the same work, found two
-type errors that would have broken a release build.
+Every testing layer added so far has paid for itself on the first run, which is
+the argument for adding the native one:
+
+- The **UI suite** found that every custom composite declared an accessibility
+  label but never set `accessible` — so screen readers announced child fragments
+  instead of the composed sentence, making every label written to that point
+  inert. It also enabled the first full `tsc` over the app, which found two type
+  errors that would have broken a release build.
+- The **end-to-end suite** found three defects on its first complete run, none
+  of which any lower layer could see:
+  1. **A cold-start race.** `HomeScreen` renders happily with a null profile
+     ("Welcome", level 1), so tapping Play before auth resolved began a game the
+     submission path then refused to score — the player got a result screen
+     reading `✓` above "Not this time", with 0 points, and the game was only
+     queued. Submission no longer depends on the profile being loaded.
+  2. **A crash for every user, once a day.** `submitGameResult` merged only
+     `stats` into `challenges/{date}`. If the first player of the day arrived
+     before the scheduled provisioner ran, that document existed with counters
+     and nothing else; the client read `moduleId` straight off it, handed
+     `undefined` to the registry and hit the error boundary. Fixed on three
+     layers: the function writes complete documents, the client treats the
+     document as an enrichment and falls back to the derived challenge, and an
+     unknown module id now degrades instead of throwing.
+  3. **A dishonest message.** A permanently rejected submission was queued for
+     retry and shown as "it will sync when you are back online". Permanent
+     failures are now distinguished from transient ones, are not retried, and
+     say so.
 
 **How to Play only covers Number Logic.** `HowToPlayScreen` is the ±1 explainer
 and is hardcoded to that module. Memory Grid teaches itself on the board

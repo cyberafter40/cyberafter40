@@ -1,5 +1,6 @@
 import { doc, getDoc, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { deriveDailyChallenge, type DailyChallenge } from '@/daily/challenge';
+import { tryGetGameModule } from '@/engine/registry';
 import { toDateKey } from '@/utils/date';
 import { getDb } from '../firebase';
 import { paths, type DailyChallengeDoc, type DailyEntryDoc } from './schema';
@@ -35,17 +36,7 @@ export async function fetchDailyChallenge(
   try {
     const snapshot = await getDoc(challengeRef(dateKey));
     if (snapshot.exists()) {
-      const remote = snapshot.data() as DailyChallengeDoc;
-      // Trust the server's variant if it ever diverges from local derivation
-      // (e.g. a mid-day hotfix), but keep playing regardless.
-      return {
-        id: remote.id,
-        date: remote.date,
-        moduleId: remote.moduleId,
-        variantId: remote.variantId,
-        seed: remote.seed,
-        stats: remote.stats ?? null,
-      };
+      return mergeWithDerived(derived, snapshot.data() as Partial<DailyChallengeDoc>);
     }
   } catch {
     // Offline or rules denied — the derived challenge is authoritative enough.
@@ -59,20 +50,47 @@ export function observeDailyChallenge(
   onChange: (challenge: DailyChallengeView) => void,
 ): Unsubscribe {
   return onSnapshot(challengeRef(dateKey), (snapshot) => {
+    const derived = deriveDailyChallenge(dateKey);
     if (!snapshot.exists()) {
-      onChange({ ...deriveDailyChallenge(dateKey), stats: null });
+      onChange({ ...derived, stats: null });
       return;
     }
-    const remote = snapshot.data() as DailyChallengeDoc;
-    onChange({
-      id: remote.id,
-      date: remote.date,
-      moduleId: remote.moduleId,
-      variantId: remote.variantId,
-      seed: remote.seed,
-      stats: remote.stats ?? null,
-    });
+    onChange(mergeWithDerived(derived, snapshot.data() as Partial<DailyChallengeDoc>));
   });
+}
+
+/**
+ * Combines the locally derived challenge with whatever the server document
+ * happens to carry.
+ *
+ * The remote document is an *enrichment*, never a source of required fields. It
+ * can legitimately be partial — the stats counters are merged in by
+ * `submitGameResult`, which may reach the document before the scheduled
+ * provisioner does — and a client that read `moduleId` straight off it would
+ * hand `undefined` to the registry and crash the home screen for everyone. It
+ * did, once; that is why this function exists.
+ *
+ * A module id the server names but this build does not have is treated the same
+ * way, so an older app keeps working after a new module ships server-side.
+ */
+function mergeWithDerived(
+  derived: DailyChallenge,
+  remote: Partial<DailyChallengeDoc>,
+): DailyChallengeView {
+  const moduleId =
+    remote.moduleId && tryGetGameModule(remote.moduleId) ? remote.moduleId : derived.moduleId;
+
+  // Variant and seed only travel with a module this build understands.
+  const usingRemoteModule = moduleId === remote.moduleId;
+
+  return {
+    id: remote.id ?? derived.id,
+    date: remote.date ?? derived.date,
+    moduleId,
+    variantId: (usingRemoteModule ? remote.variantId : undefined) ?? derived.variantId,
+    seed: (usingRemoteModule ? remote.seed : undefined) ?? derived.seed,
+    stats: remote.stats ?? null,
+  };
 }
 
 /** The player's single attempt at a given day, if they have played it. */

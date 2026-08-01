@@ -34,8 +34,14 @@ export interface ResultRouteParams {
   guesses: string[];
   score: ScoreBreakdown;
   events: ProgressEvent[];
-  /** False when the result is queued for later sync. */
+  /** False when the result is queued for later sync, or was rejected. */
   synced: boolean;
+  /**
+   * Set when the backend refused the result outright. Distinct from `!synced`,
+   * which normally means "queued" — telling a player a rejected game will sync
+   * later is worse than telling them nothing.
+   */
+  rejection?: { code: string; message: string } | null;
 }
 
 export type RootStackParamList = {

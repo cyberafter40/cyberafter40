@@ -59,15 +59,18 @@ export function GameScreen({ route, navigation }: Props) {
       durationMs: result.outcome.durationMs,
       solution: result.solution,
       guesses: result.moves.map((move) => move.label),
+      // The fallback must agree with the outcome. Hardcoding 'failed' here
+      // produced a result screen that showed a win tick above "Not this time".
       score: outcome?.score ?? {
         total: 0,
         xp: 0,
-        rating: 'failed',
+        rating: result.outcome.status === 'won' ? 'solid' : 'failed',
         components: [],
         isPersonalBest: false,
       },
       events: outcome?.events ?? [],
       synced: outcome?.synced ?? false,
+      rejection: outcome?.rejection ?? null,
     });
   }, [session, navigation]);
 

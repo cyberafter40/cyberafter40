@@ -7,7 +7,6 @@ import {
 } from '@/engine/session';
 import type { GameMode, GameStatus } from '@/engine/types';
 import { track } from '@/services/analytics';
-import { enqueuePendingResult } from '@/services/storage';
 import { submitResult, type SubmissionOutcome } from '@/services/submission';
 import { useProfile } from './ProfileContext';
 
@@ -120,16 +119,13 @@ export function useGameSession(input: UseGameSessionInput): UseGameSessionValue 
 
     const result = session.toResult();
 
-    if (!profile) {
-      // The profile has not loaded yet (cold start on a slow network). Queue the
-      // raw result rather than dropping it — the backend recomputes score and
-      // progression from scratch, so nothing is lost by not scoring it here.
-      await enqueuePendingResult(result);
-      return null;
-    }
-
+    // `profile` may still be null on a cold start: the home screen renders
+    // before auth resolves, so a quick tap can begin a game first. The
+    // submission does not depend on it — the backend reads its own copy — and
+    // scoring falls back to a neutral baseline, so the player still sees a real
+    // result instead of a zeroed one.
     const outcome = await submitResult({ result, profile });
-    applyLocalProfile(outcome.profile);
+    if (outcome.profile) applyLocalProfile(outcome.profile);
     return outcome;
   }, [session, profile, applyLocalProfile]);
 

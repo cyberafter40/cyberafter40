@@ -149,6 +149,23 @@ describe('submitGameResult — a legitimate daily win', () => {
     expect(challenge.data()?.stats.played).toBe(1);
     expect(challenge.data()?.stats.solved).toBe(1);
   });
+
+  it('writes a complete challenge document, not just the counters', async () => {
+    // Regression: this used to merge `stats` alone. When the first player of the
+    // day arrived before the scheduled provisioner had run, the resulting
+    // document had counters and nothing else — and every client that read it
+    // got `undefined` for moduleId and crashed on the home screen.
+    await call(playDaily());
+
+    const challenge = (await db.doc(`challenges/${CHALLENGE_ID}`).get()).data();
+    const derived = deriveDailyChallenge(CHALLENGE_ID);
+
+    expect(challenge?.id).toBe(derived.id);
+    expect(challenge?.date).toBe(derived.date);
+    expect(challenge?.moduleId).toBe(derived.moduleId);
+    expect(challenge?.variantId).toBe(derived.variantId);
+    expect(challenge?.seed).toBe(derived.seed);
+  });
 });
 
 describe('submitGameResult — one attempt per day', () => {

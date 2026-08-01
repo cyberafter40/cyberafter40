@@ -1,6 +1,7 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
+import { deriveDailyChallenge } from '@/daily/challenge';
 import { getGameModule } from '@/engine/registry';
 import { applyGameResult } from '@/progress/progressEngine';
 import { createProfile, type UserProfile } from '@/progress/types';
@@ -168,9 +169,20 @@ export const submitGameResult = onCall(
           durationMs: result.outcome.durationMs,
         });
 
+        // The identity fields are written alongside the stats, not just by the
+        // scheduled provisioner. Merging stats alone would create a document
+        // with nothing but counters if the first player of the day arrives
+        // before `provisionDailyChallenges` has run — and every client reading
+        // that document would then find no moduleId.
+        const derived = deriveDailyChallenge(result.challengeId, result.moduleId);
         tx.set(
           db.doc(`challenges/${result.challengeId}`),
           {
+            id: derived.id,
+            date: derived.date,
+            moduleId: derived.moduleId,
+            variantId: derived.variantId,
+            seed: derived.seed,
             stats: {
               played: FieldValue.increment(1),
               solved: FieldValue.increment(result.outcome.status === 'won' ? 1 : 0),

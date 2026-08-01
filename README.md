@@ -34,8 +34,8 @@ Working out which is the game.
 | **Modes** | Daily Challenge (one attempt, same code worldwide) · Classic free play |
 | **Progression** | XP, 50 levels with titles, 21 badges, daily streaks |
 | **Social** | Daily / weekly / all-time leaderboards |
-| **Tests** | 247 tests — 102 domain · 55 UI (components, boards, screens) · 31 result validation · 59 against the Firebase emulators |
-| **CI** | GitHub Actions — typecheck, lint and all four suites on every push |
+| **Tests** | 255 tests — 102 domain · 55 UI · 31 result validation · 60 emulator (rules + functions) · 7 end-to-end (real app, real backend) |
+| **CI** | GitHub Actions — typecheck, lint and all five suites on every push |
 
 ### Documentation
 
@@ -72,10 +72,19 @@ Backend:
 ```bash
 cd functions && npm install && npm run build
 npm test                # 31 result-validation tests, no infrastructure needed
-npm run test:emulator   # 59 tests: security rules + all three functions
+npm run test:emulator   # 60 tests: security rules + all three functions
                         # (starts and stops the emulators itself; needs Java)
 firebase emulators:start                       # local Auth + Firestore + Functions
 ```
+
+End to end — the real bundled app in a browser, against the real emulator suite:
+
+```bash
+npm run test:e2e        # builds, starts Firestore/Auth/Functions, drives Chromium
+```
+
+Point the app at your local emulators during development the same way, by
+setting `EXPO_PUBLIC_FIREBASE_EMULATOR_HOST=127.0.0.1` before `npx expo start`.
 
 From the repo root, `npm run test:all` runs every suite that needs no emulator.
 
