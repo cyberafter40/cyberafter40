@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "outDir": "lib",
+    "rootDir": "..",
+    "sourceMap": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "compileOnSave": true,
+  /**
+   * The backend compiles the app's pure domain layers directly out of ../src.
+   * That is the whole point of keeping the engine, scoring and progress code
+   * free of React Native imports: the server replays games with byte-identical
+   * logic rather than a re-implementation that can drift.
+   */
+  "include": [
+    "src/**/*.ts",
+    "../src/engine/**/*.ts",
+    "../src/scoring/**/*.ts",
+    "../src/progress/**/*.ts",
+    "../src/games/**/*.ts",
+    "../src/daily/**/*.ts",
+    "../src/utils/date.ts",
+    "../src/utils/names.ts"
+  ],
+  "exclude": ["../src/games/**/*.tsx"]
+}

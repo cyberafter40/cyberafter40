@@ -1,0 +1,30 @@
+node_modules/
+.expo/
+dist/
+web-build/
+*.log
+npm-debug.*
+yarn-error.*
+
+# Native build output
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Environment / credentials — never commit these
+.env
+.env.local
+.env.*.local
+credentials/
+google-services.json
+GoogleService-Info.plist
+functions/lib/
+functions/node_modules/
+.firebase/
+
+# OS
+.DS_Store

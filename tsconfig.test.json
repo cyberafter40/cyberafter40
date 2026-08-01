@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["jest", "node"]
+  },
+  /**
+   * Tests cover the pure domain layers only — the ones with no React Native or
+   * Firebase imports. Those are also exactly the layers the Cloud Functions
+   * compile (see functions/tsconfig.json), so a green run here means the client
+   * and the server agree about game rules, scoring and progression.
+   */
+  "include": [
+    "__tests__/**/*.ts",
+    "src/engine/**/*.ts",
+    "src/scoring/**/*.ts",
+    "src/progress/**/*.ts",
+    "src/games/**/*.ts",
+    "src/daily/**/*.ts",
+    "src/utils/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}
