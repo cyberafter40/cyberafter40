@@ -20,7 +20,8 @@
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
     "deploy:functions": "firebase deploy --only functions",
     "test:ui": "jest --config jest.ui.config.js",
-    "test:e2e": "./scripts/e2e.sh"
+    "test:e2e": "./scripts/e2e.sh",
+    "build:webmvp": "node webmvp/build.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",
@@ -54,6 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "babel-plugin-module-resolver": "^5.0.2",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "jest": "^29.7.0",

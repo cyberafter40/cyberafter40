@@ -57,6 +57,18 @@ cp .env.example .env          # fill in from the Firebase console
 npx expo start                # press i for iOS, a for Android
 ```
 
+Want to play it before any of that? There is a backend-free build that runs
+from a single HTML file — no Firebase project, no Apple account, no server:
+
+```bash
+npm run build:webmvp          # → webmvp/dist/mindcode.html
+```
+
+It imports the real engine, scoring, progress and daily-challenge code out of
+`src/`, so today's puzzle is the same puzzle the shipped app would generate.
+Only React Native and Firestore are swapped out (plain DOM, `localStorage`).
+See [`webmvp/README.md`](webmvp/README.md).
+
 Without Firebase credentials the app will still build, but sign-in and sync will
 fail on launch — see [`docs/DEPLOYMENT_APPSTORE.md`](docs/DEPLOYMENT_APPSTORE.md)
 for the ten-minute project setup.
@@ -130,6 +142,7 @@ src/
   ui/         design tokens and components
   screens/    the nine screens
 functions/    submitGameResult · deleteAccount · provisionDailyChallenges
+webmvp/       backend-free single-file build, for testing before the stores
 ```
 
 ---

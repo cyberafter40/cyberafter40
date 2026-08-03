@@ -112,6 +112,13 @@ work against a real project. `deleteAccount`'s collection-group sweep over
 than by testing. Deploy indexes before functions and exercise account deletion
 once on staging.
 
+**No real-device test of the native build.** The `webmvp/` build closes part
+of this gap — it puts the real engine, scoring and progress code on a real phone
+today, which is enough to measure whether the daily loop holds. What it cannot
+test is the React Native layer itself: gestures, haptics, Reanimated timing,
+the native keyboard and safe-area behaviour are still unverified. TestFlight
+remains the only way to check those.
+
 **Still no test on a real device.** The app now genuinely runs end to end —
 `npm run test:e2e` bundles it, starts Firestore, Auth and Functions, and drives
 a browser through a full Daily Challenge against the real backend. What that
