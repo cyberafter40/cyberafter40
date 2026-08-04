@@ -49,11 +49,45 @@ Consequently there is **no account, no sync, no leaderboard and no server-side
 validation**. A player here could edit their own score in devtools; that is
 fine, because nothing they do leaves the device.
 
+## Putting it on a URL
+
+A file people have to download is a file most testers never open. Host it and
+send a link instead. Firebase Hosting is free on the Spark plan — no billing
+account, unlike Cloud Functions — and `firebase.json` is already configured:
+
+```bash
+firebase login
+firebase use --add            # pick the project, alias it "default"
+npm run deploy:webmvp         # builds, then deploys hosting only
+```
+
+That gives `https://<project>.web.app`. Send that link; it opens on any phone
+with no install and no account.
+
+The `no-cache` header on `mindcode.html` is deliberate: testers reload rather
+than reinstall, so a stale cached build is a bug report about code you already
+fixed.
+
+## Collecting feedback
+
+Set `FEEDBACK_URL` in `config.ts` to any form link and a "Send feedback" button
+appears on the home screen. Leave it empty and no button renders.
+
+The link carries the tester's own play summary as query parameters — days since
+install, distinct days played, games, wins, streak. That is the point: a form
+gathers opinions, and opinions are the less useful half. Whether people came
+back is a fact about behaviour that nobody reports accurately about themselves,
+so every response arrives with it attached.
+
+To capture those values in Google Forms, build a pre-filled link (Forms → ⋮ →
+*Get pre-filled link*) and map each `entry.NNNN` to the matching key.
+
 ## Files
 
 | | |
 | --- | --- |
 | `app.ts` | the shell: screens, persistence, input |
+| `config.ts` | feedback form link and the play-summary it carries |
 | `styles.css` | design tokens mirrored from `src/ui/theme.ts` |
 | `build.mjs` | esbuild → a single inlined HTML file |
 | `dist/mindcode.html` | standalone document — open it, mail it, host it |

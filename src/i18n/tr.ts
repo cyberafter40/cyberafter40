@@ -423,6 +423,10 @@ export const tr: Translation = {
       'Kareler teker teker yanar. Sırayı izle, sonra aynı sırayla geri dokun. Yanlış dokunuş bir hata hakkına mal olur ama ilerlemeni kaybettirmez.',
   },
 
+  feedback: {
+    send: 'Geri bildirim gönder',
+  },
+
   errorBoundary: {
     title: 'Bir şeyler bozuldu',
     body: 'İlerlemen güvende. Uygulamayı yeniden yüklemek için aşağı dokun.',

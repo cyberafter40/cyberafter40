@@ -21,7 +21,8 @@
     "deploy:functions": "firebase deploy --only functions",
     "test:ui": "jest --config jest.ui.config.js",
     "test:e2e": "./scripts/e2e.sh",
-    "build:webmvp": "node webmvp/build.mjs"
+    "build:webmvp": "node webmvp/build.mjs",
+    "deploy:webmvp": "npm run build:webmvp && firebase deploy --only hosting"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",

@@ -49,6 +49,7 @@ import {
   type TranslationParams,
 } from '@/i18n';
 import { formatCountdown, formatDuration, msUntilNextUtcDay, toDateKey } from '@/utils/date';
+import { FEEDBACK_URL, feedbackLink } from './config';
 
 /* ------------------------------------------------------------------ *
  * Local persistence — the stand-in for Firestore
@@ -67,6 +68,10 @@ interface SaveFile {
   profile: UserProfile;
   dailyEntries: Record<string, DailyEntry>;
   locale: Locale | 'system';
+  /** When this browser first opened the build. The denominator for retention. */
+  firstSeenAt: number;
+  /** UTC date keys on which a game was actually finished. The numerator. */
+  activeDays: string[];
 }
 
 function freshSave(): SaveFile {
@@ -79,6 +84,8 @@ function freshSave(): SaveFile {
     }),
     dailyEntries: {},
     locale: 'system',
+    firstSeenAt: Date.now(),
+    activeDays: [],
   };
 }
 
@@ -92,6 +99,8 @@ function load(): SaveFile {
       profile: parsed.profile,
       dailyEntries: parsed.dailyEntries ?? {},
       locale: parsed.locale ?? 'system',
+      firstSeenAt: parsed.firstSeenAt ?? Date.now(),
+      activeDays: parsed.activeDays ?? [],
     };
   } catch {
     // A corrupt save must not brick the app; start over rather than crash.
@@ -199,6 +208,9 @@ function finish(session: GameSession): void {
 
   const update = applyGameResult({ profile: state.profile, result, score });
   state.profile = update.profile;
+
+  const today = toDateKey(result.finishedAt);
+  if (!state.activeDays.includes(today)) state.activeDays.push(today);
 
   if (result.mode === 'daily' && result.challengeId) {
     state.dailyEntries[result.challengeId] = {
@@ -426,7 +438,34 @@ function renderHome(): HTMLElement {
     langRow.appendChild(chip);
   }
 
-  page.appendChild(el('footer', { class: 'home-footer' }, [howTo, langRow]));
+  const footer = el('footer', { class: 'home-footer' }, [howTo]);
+
+  if (FEEDBACK_URL) {
+    const days = Math.max(
+      1,
+      Math.floor((Date.now() - state.firstSeenAt) / 86_400_000) + 1,
+    );
+    const link = el(
+      'a',
+      {
+        class: 'btn ghost',
+        href: feedbackLink({
+          d: days,
+          a: state.activeDays.length,
+          g: state.profile.stats.played,
+          w: state.profile.stats.won,
+          s: state.profile.streak.current,
+        }),
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      },
+      [t('feedback.send')],
+    );
+    footer.appendChild(link);
+  }
+
+  footer.appendChild(langRow);
+  page.appendChild(footer);
   return page;
 }
 

@@ -428,6 +428,10 @@ export const en = {
       'Tiles light up one at a time. Watch the order, then tap them back in the same sequence. A wrong tap costs a mistake but does not lose your progress.',
   },
 
+  feedback: {
+    send: 'Send feedback',
+  },
+
   errorBoundary: {
     title: 'Something broke',
     body: 'Your progress is safe. Tap below to reload the app.',
